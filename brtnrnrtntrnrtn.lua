@@ -476,7 +476,239 @@ RunService.RenderStepped:Connect(function()
 end)
 end)
 
-local CombatSection = CombatTab:Section({Name = "Gun Mods", Side = 2 })
+task.spawn(function()
+local replicated_first = game:GetService("ReplicatedFirst")
+local players = game:GetService("Players")
+local workspace = game:GetService("Workspace")
+local run_service = game:GetService("RunService")
+
+local framework = require(replicated_first.Framework)
+local wrapper = getupvalue(getupvalue(framework.require, 1), 1)
+
+local libraries = wrapper.Libraries
+local bullets = libraries.Bullets
+local camera = workspace.CurrentCamera
+local lp = players.LocalPlayer
+
+-- SETTINGS
+local Settings = {
+    Enabled = false,
+    HitChance = 100,
+    MaxDistance = 2000,
+    TargetType = "Closest to mouse",
+    TargetHitbox = "Head",
+
+    SnapLine = false,
+    SnapLineColor = Color3.fromRGB(255,255,255),
+    SnapLineThickness = 2,
+
+    UseFOV = true,
+    FOVColor = Color3.fromRGB(255,255,255),
+    FOVTransparency = 0.8,
+    FOVRadius = 150,
+    FOVThickness = 2,
+}
+
+-- DRAWINGS
+local FOVCircle = Drawing.new("Circle")
+local SnapLineMain = Drawing.new("Line")
+
+-- UPDATE FOV VISUAL
+local function UpdateFOV()
+    FOVCircle.Visible = Settings.UseFOV
+    if not Settings.UseFOV then return end
+
+    FOVCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+    FOVCircle.Radius = Settings.FOVRadius
+    FOVCircle.Color = Settings.FOVColor
+    FOVCircle.Thickness = Settings.FOVThickness
+    FOVCircle.Transparency = Settings.FOVTransparency
+    FOVCircle.Filled = false
+end
+
+-- FIND CLOSEST PLAYER
+local function GetClosestPlayer()
+    local closestChar = nil
+    local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+    local shortest = math.huge
+
+    for _, player in ipairs(players:GetPlayers()) do
+        if player ~= lp and player.Character and player.Character:FindFirstChild(Settings.TargetHitbox) then
+            local char = player.Character
+            local part = char[Settings.TargetHitbox]
+            local pos, onScreen = camera:WorldToViewportPoint(part.Position)
+            if not onScreen then continue end
+
+            local dist3D = (lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")) and (lp.Character.HumanoidRootPart.Position - part.Position).Magnitude or math.huge
+            if dist3D > Settings.MaxDistance then continue end
+
+            local dist2D = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+            if dist2D <= Settings.FOVRadius and dist2D < shortest then
+                shortest = dist2D
+                closestChar = char
+            end
+        end
+    end
+    return closestChar
+end
+
+run_service.RenderStepped:Connect(UpdateFOV)
+
+-- HOOK FIRE
+local old_fire
+old_fire = hookfunction(bullets.Fire, function(weapon_data, character_data, _, gun_data, origin, direction, ...)
+    if not Settings.Enabled then
+        return old_fire(weapon_data, character_data, _, gun_data, origin, direction, ...)
+    end
+
+    local target = GetClosestPlayer()
+    if not target then
+        return old_fire(weapon_data, character_data, _, gun_data, origin, direction, ...)
+    end
+
+    if math.random(1, 100) <= Settings.HitChance then
+        local hitPart = target:FindFirstChild(Settings.TargetHitbox) or target:FindFirstChild("Head")
+        if hitPart then
+            direction = (hitPart.Position - origin).Unit
+        end
+    end
+
+    return old_fire(weapon_data, character_data, _, gun_data, origin, direction, ...)
+end)
+
+-- SNAP LINE VISUAL
+run_service.RenderStepped:Connect(function()
+    if not Settings.SnapLine then
+        SnapLineMain.Visible = false
+        return
+    end
+
+    local target = GetClosestPlayer()
+    if not target or not target:FindFirstChild(Settings.TargetHitbox) then
+        SnapLineMain.Visible = false
+        return
+    end
+
+    local part = target[Settings.TargetHitbox]
+    local pos, onScreen = camera:WorldToViewportPoint(part.Position)
+    if not onScreen then return end
+
+    local dist2D = (Vector2.new(pos.X, pos.Y) - Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)).Magnitude
+    local dist3D = (lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")) and (lp.Character.HumanoidRootPart.Position - part.Position).Magnitude or math.huge
+
+    if dist2D > Settings.FOVRadius or dist3D > Settings.MaxDistance then
+        SnapLineMain.Visible = false
+        return
+    end
+
+    SnapLineMain.Visible = true
+    SnapLineMain.Color = Settings.SnapLineColor
+    SnapLineMain.Thickness = Settings.SnapLineThickness
+    SnapLineMain.From = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+    SnapLineMain.To = Vector2.new(pos.X, pos.Y)
+end)
+
+-- ========================= UI =========================
+local CombatSection = CombatTab:Section({Name = "Silent Aim", Side = 1 })
+
+CombatSection:Toggle({
+    Name = "Silent Aim",
+    Flag = "SilentAim",
+    Callback = function(state) Settings.Enabled = state end
+})
+
+CombatSection:Slider({
+    Name = "Hit Chance",
+    Flag = "HitChance",
+    Min = 1, Max = 100,
+    Default = 100,
+    Decimals = 1,
+    Callback = function(v) Settings.HitChance = v end
+})
+
+CombatSection:Slider({
+    Name = "Max Distance",
+    Flag = "MaxDistance",
+    Min = 100, 
+    Max = 2000,
+    Default = 2000,
+    Decimals = 0,
+    Callback = function(v) Settings.MaxDistance = v end
+})
+
+CombatSection:Dropdown({
+    Name = "Target Type",
+    Flag = "TargetType",
+    items = {"Closest to mouse", "Closest to player"},
+    Default = "Closest to mouse",
+    Callback = function(v) Settings.TargetType = v end
+})
+
+CombatSection:Dropdown({
+    Name = "Target Hitbox",
+    Flag = "TargetHitbox",
+    items = {"Head", "UpperTorso", "LowerTorso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg"},
+    Default = "Head",
+    Callback = function(v) Settings.TargetHitbox = v end
+})
+
+local VisualsSection = CombatTab:Section({Name = "Snap Line", Side = 2 })
+
+local Toggle = VisualsSection:Toggle({
+    Name = "Snap Line",
+    Flag = "SnapLine",
+    Callback = function(state) Settings.SnapLine = state end
+})
+Toggle:Colorpicker({
+    Name = "Snap Line Color",
+    Flag = "SnapColor",
+    Color = Settings.SnapLineColor,
+    Callback = function(c) Settings.SnapLineColor = c end
+})
+VisualsSection:Slider({
+    Name = "Snap Line Thickness",
+    Flag = "SnapThickness",
+    Min = 1, 
+    Max = 5,
+    Default = 1,
+    Decimals = 1,
+    Callback = function(v) Settings.SnapLineThickness = v end
+})
+
+local VisualsSection = CombatTab:Section({Name = "Fov", Side = 2 })
+
+local Toggle = VisualsSection:Toggle({
+    Name = "Use Field of View",
+    Flag = "UseFOV",
+    Callback = function(state) Settings.UseFOV = state end
+})
+Toggle:Colorpicker({
+    Name = "FOV Color",
+    Flag = "FOVColor",
+    Color = Settings.FOVColor,
+    Callback = function(c) Settings.FOVColor = c end
+})
+VisualsSection:Slider({
+    Name = "Field of View",
+    Flag = "FOVRadius",
+    Min = 50, 
+    Max = 500,
+    Default = 150,
+    Decimals = 1,
+    Callback = function(v) Settings.FOVRadius = v end
+})
+VisualsSection:Slider({
+    Name = "Circle Thickness",
+    Flag = "FOVThickness",
+    Min = 1, 
+    Max = 5,
+    Default = 1,
+    Decimals = 1,
+    Callback = function(v) Settings.FOVThickness = v end
+})
+
+end)
+local CombatSection = CombatTab:Section({Name = "Gun Mods", Side = 1 })
 task.spawn(function()
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -556,108 +788,153 @@ local Toggle = CombatSection:Toggle({
     end
 })
 
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local FrameworkModule = require(ReplicatedFirst:WaitForChild("Framework"))
-FrameworkModule:WaitForLoaded()
-
-local Interface = FrameworkModule.Libraries.Interface
-local Network = FrameworkModule.Libraries.Network
-local Bullets = FrameworkModule.Libraries.Bullets
-
-local GetSpreadAngle = getupvalue(Bullets.Fire, 1)
-local originalFire = Bullets.Fire
-
-local noSpreadEnabled = false
-local spreadScale = 0
-
-local Toggle = CombatSection:Toggle({
-    Name = "No Spread",
-    Flag = "No Spread",
-    Callback = function(state)
-        noSpreadEnabled = state
-    end
-})
-
-local Slider = CombatSection:Slider({
-    Name = "Spread Amount",
-    Flag = "SpreadAmount",
-    Min = 0,
-    Max = 100,
-    Default = 0,
-    Decimals = 1,
-    Callback = function(value)
-        spreadScale = value / 100
-    end
-})
-
-setupvalue(Bullets.Fire, 1, function(Character, CCamera, Weapon, ...)
-    if noSpreadEnabled then
-        local OldMoveState = Character.MoveState
-        local OldZooming = Character.Zooming
-        local OldFirstPerson = CCamera.FirstPerson
-
-        Character.MoveState = "Walking"
-        Character.Zooming = true
-        CCamera.FirstPerson = true
-
-        local ReturnArgs = {GetSpreadAngle(Character, CCamera, Weapon, ...)}
-
-        Character.MoveState = OldMoveState
-        Character.Zooming = OldZooming
-        CCamera.FirstPerson = OldFirstPerson
-
-        return unpack(ReturnArgs)
-    end
-
-    return GetSpreadAngle(Character, CCamera, Weapon, ...)
 end)
 
-local ReplicatedFirst = cloneref(game:GetService("ReplicatedFirst"))
-local Bullets = require(ReplicatedFirst:WaitForChild("Framework")).Libraries.Bullets
+local CombatSection = CombatTab:Section({Name = "Head Expander", Side = 1 })
+task.spawn(function()
+    local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
-local GetFireImpulse = getupvalue(Bullets.Fire, 6)
+-- Default values
+local ExpansionSize = Vector3.new(10, 10, 10)
+local Transparency = 0.5
 
+local OriginalSizes = {}
 
-local noRecoilEnabled = false
-local recoilScale = 0.1
+-- Функція для розширення голови
+local function expandHead(char)
+    -- Перевірка, щоб не змінювало LocalPlayer
+    if char.Parent == LocalPlayer then return end
 
+    local head = char:FindFirstChild("Head")
+    if head and head:IsA("BasePart") then
+        if not OriginalSizes[head] then
+            OriginalSizes[head] = head.Size
+        end
+        head.Size = ExpansionSize
+        head.Transparency = Transparency
+        head.Material = Enum.Material.Neon
+    end
+end
 
-setupvalue(Bullets.Fire, 6, function(...)
-    local impulse = {GetFireImpulse(...)}
+-- Підключення до гравця
+local function onPlayer(plr)
+    if plr == LocalPlayer then return end
+    if plr.Character then
+        expandHead(plr.Character)
+    end
+    plr.CharacterAdded:Connect(function(char)
+        char:WaitForChild("Head")
+        expandHead(char)
+    end)
+end
 
-    if noRecoilEnabled then
-        for i = 1, #impulse do
-            impulse[i] = impulse[i] * recoilScale
+-- Контролювання включення/вимкнення
+local HeadExpandEnabled = false
+local Connections = {}
+
+local function enableExpander()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        onPlayer(plr)
+    end
+    Connections["PlayerAdded"] = Players.PlayerAdded:Connect(onPlayer)
+end
+
+local function disableExpander()
+    if Connections["PlayerAdded"] then
+        Connections["PlayerAdded"]:Disconnect()
+        Connections["PlayerAdded"] = nil
+    end
+    -- Відновлення оригінальних розмірів
+    for head, size in pairs(OriginalSizes) do
+        if head and head.Parent then
+            head.Size = size
+            head.Transparency = 0
+            head.Material = Enum.Material.Plastic
         end
     end
+end
 
-    return unpack(impulse)
-end)
-
+-- JanLib UI інтеграція
 local Toggle = CombatSection:Toggle({
-    Name = "No Recoil",
-    Flag = "No Recoil",
-    Callback = function(state)
-        noRecoilEnabled = state
+    name = "Enable Head Expander",  
+    flag = "EnableHeadExpander",
+    Default = false,
+    callback = function(val)
+        HeadExpandEnabled = val
+        if val then
+            enableExpander()
+        else
+            disableExpander()
+        end
     end
 })
 
 local Slider = CombatSection:Slider({
-    Name = "Recoil Control",
-    Flag = "Recoil",
-    Min = 0,
-    Max = 100,
-    Default = 0,
+    name = "Head Size", 
+    flag = "HeadSizeSlider", 
+    min = 2, 
+    max = 40, 
+    value = 10, 
     Decimals = 1,
-    Callback = function(value)
-        recoilScale = value / 100
+    callback = function(val)
+        ExpansionSize = Vector3.new(val, val, val)
+        if HeadExpandEnabled then
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
+                    expandHead(plr.Character)
+                end
+            end
+        end
     end
 })
 
+local Slider = CombatSection:Slider({
+    name = "Head Transparency",
+    flag = "HeadTransparencySlider",
+    min = 0, 
+    max = 1, 
+    value = 0.5, 
+    Decimals = 0.1,
+    callback = function(val)
+        Transparency = val
+        if HeadExpandEnabled then
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
+                    expandHead(plr.Character)
+                end
+            end
+        end
+    end
+})
+
+-- Метаметатаблиця для маскування розміру
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+
+local oldIndex = mt.__index
+local oldNamecall = mt.__namecall
+
+mt.__index = newcclosure(function(self, key)
+    if key == "Size" and OriginalSizes[self] then
+        return OriginalSizes[self]
+    end
+    return oldIndex(self, key)
 end)
 
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    if method == "Size" and OriginalSizes[self] then
+        return OriginalSizes[self]
+    end
+
+    return oldNamecall(self, unpack(args))
+end)
+
+setreadonly(mt, true)
+end)
 local VisualsSection = VisualsTab:Section({Name = "Player Esp", Side = 1 })
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -1130,6 +1407,136 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+local VisualsSection = VisualsTab:Section({Name = "Player Chams", Side = 1 })
+task.spawn(function()
+local CoreGui = game:GetService("CoreGui")
+
+local lp = Players.LocalPlayer
+local connections = {}
+
+local Storage = Instance.new("Folder")
+Storage.Name = "Highlight_Storage"
+Storage.Parent = CoreGui
+
+local FillColor = Color3.fromRGB(175, 25, 255)
+local OutlineColor = Color3.fromRGB(255, 255, 255)
+local FillTransparencySlider = 10
+local OutlineTransparencySlider = 10
+local ChamsEnabled = false
+
+local function ToTransparency(val)
+    return math.clamp(val / 20, 0, 1)
+end
+
+local function UpdateHighlight(h)
+    h.FillColor = FillColor
+    h.OutlineColor = OutlineColor
+    h.FillTransparency = ToTransparency(FillTransparencySlider)
+    h.OutlineTransparency = ToTransparency(OutlineTransparencySlider)
+end
+
+local function Highlight(plr)
+    if plr == lp then return end
+
+    if Storage:FindFirstChild(plr.Name) then
+        Storage[plr.Name]:Destroy()
+    end
+
+    local h = Instance.new("Highlight")
+    h.Name = plr.Name
+    h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    h.Enabled = ChamsEnabled
+    h.Parent = Storage
+
+    local function ApplyToCharacter(char)
+        h.Adornee = char
+        UpdateHighlight(h)
+    end
+
+    if plr.Character then
+        ApplyToCharacter(plr.Character)
+    end
+
+    connections[plr] = plr.CharacterAdded:Connect(ApplyToCharacter)
+end
+
+Players.PlayerAdded:Connect(Highlight)
+for _, plr in ipairs(Players:GetPlayers()) do
+    Highlight(plr)
+end
+
+Players.PlayerRemoving:Connect(function(plr)
+    if Storage:FindFirstChild(plr.Name) then
+        Storage[plr.Name]:Destroy()
+    end
+    if connections[plr] then
+        connections[plr]:Disconnect()
+        connections[plr] = nil
+    end
+end)
+
+local Toggle = VisualsSection:Toggle({
+    name = "Chams",
+    flag = "chams_toggle",
+    default = false,
+    callback = function(state)
+        ChamsEnabled = state
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.Enabled = ChamsEnabled
+        end
+    end,
+})
+Toggle:Colorpicker({
+    flag = "chams_fill_color",
+    color = FillColor,
+    callback = function(color)
+        FillColor = color
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.FillColor = FillColor
+        end
+    end,
+})
+Toggle:Colorpicker({
+    flag = "chams_outline_color",
+    color = OutlineColor,
+    callback = function(color)
+        OutlineColor = color
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.OutlineColor = OutlineColor
+        end
+    end,
+})
+
+local Slider = VisualsSection:Slider({
+    name = "Fill Transparency",
+    flag = "fill_transparency",
+    min = 0,
+    max = 20,
+    value = FillTransparencySlider,
+    decimals = 1,
+    callback = function(val)
+        FillTransparencySlider = val
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.FillTransparency = ToTransparency(val)
+        end
+    end,
+})
+
+local Slider = VisualsSection:Slider({
+    name = "Outline Transparency",
+    flag = "outline_transparency",
+    min = 0,
+    max = 20,
+    value = OutlineTransparencySlider,
+    decimals = 1,
+    callback = function(val)
+        OutlineTransparencySlider = val
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.OutlineTransparency = ToTransparency(val)
+        end
+    end,
+})
+end)
 local VisualsSection = VisualsTab:Section({Name = "Corpse Esp", Side = 1 })
 local corpsesFolder = workspace:WaitForChild("Corpses")
 local RunService = game:GetService("RunService")
@@ -2198,7 +2605,190 @@ local MultiDropdown = VisualsSection:Dropdown({
     end
 })
 
-local VisualsSection = VisualsTab:Section({Name = "Gun Chams", Side = 2 })
+local VisualsSection = VisualsTab:Section({Name = "Gun Tracer", Side = 2 })
+task.spawn(function()
+-- ⚙️ CONFIG
+local world_utilities = {
+    BulletTracer = false,
+    BulletTracerColor = Color3.fromRGB(0, 179, 255),
+    BulletTracerLength = 3
+}
+
+-- 📁 STORAGE
+local BulletTracerFolder = Instance.new("Folder")
+BulletTracerFolder.Name = "BulletTracers"
+BulletTracerFolder.Parent = workspace
+
+-- 💫 FUNCTION
+function createBulletTracerBeam(origin, direct)
+    if not world_utilities.BulletTracer or not origin or not direct then return end
+
+    task.spawn(function()
+        local direction = direct * 2000
+
+        local rayParams = RaycastParams.new()
+        rayParams.FilterDescendantsInstances = {
+            game.Players.LocalPlayer.Character,
+            BulletTracerFolder,
+            workspace:FindFirstChild("Effects")
+        }
+        rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+        local result = workspace:Raycast(origin, direction, rayParams)
+        local target = (result and result.Position) or (origin + direction)
+
+        local part = Instance.new("Part")
+        part.Anchored = true
+        part.CanCollide = false
+        part.Transparency = 1
+        part.Parent = BulletTracerFolder
+
+        local att0 = Instance.new("Attachment", part)
+        att0.WorldPosition = origin
+        local att1 = Instance.new("Attachment", part)
+        att1.WorldPosition = target
+
+        local beam = Instance.new("Beam", part)
+        beam.Attachment0 = att0
+        beam.Attachment1 = att1
+        beam.Texture = "rbxassetid://446111271"
+        beam.FaceCamera = true
+        beam.TextureMode = Enum.TextureMode.Stretch
+        beam.Color = ColorSequence.new(world_utilities.BulletTracerColor)
+        beam.LightEmission = 1
+        beam.Width0 = 0.8
+        beam.Width1 = 0.25
+        beam.TextureSpeed = 5
+        beam.Transparency = NumberSequence.new(0.1)
+
+        task.delay(world_utilities.BulletTracerLength, function()
+            if part then part:Destroy() end
+        end)
+    end)
+end
+
+-- 💣 HOOK
+local replicated_first = game:GetService("ReplicatedFirst")
+local framework = require(replicated_first.Framework)
+local wrapper = getupvalue(getupvalue(framework.require, 1), 1)
+local bullets = wrapper.Libraries.Bullets
+
+local old_fire
+old_fire = hookfunction(bullets.Fire, function(weapon_data, character_data, _, gun_data, origin, direction, ...)
+    if world_utilities.BulletTracer then
+        createBulletTracerBeam(origin, direction)
+    end
+    return old_fire(weapon_data, character_data, _, gun_data, origin, direction, ...)
+end)
+
+-- 🧩 UI
+local Toggle = VisualsSection:Toggle({
+    Name = "Bullet Tracer",
+    Default = false,
+    Flag = "tracer",
+    callback = function(state)
+        world_utilities.BulletTracer = state
+    end
+})
+Toggle:Colorpicker({
+    Name = "Tracer Color",
+    Flag = "tracer_color",
+    Color = world_utilities.BulletTracerColor,
+    callback = function(color)
+        world_utilities.BulletTracerColor = color
+    end
+})
+
+end)
+
+local VisualsSection = VisualsTab:Section({Name = "Local Player", Side = 2 })
+local player = Players.LocalPlayer
+
+local enabled = false
+local color = Color3.fromRGB(255, 255, 255)
+local material = Enum.Material.ForceField 
+
+local function applyChams(char)
+    task.wait(0)
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            part.Color = color
+            part.Material = material
+        end
+    end
+end
+
+local function clearChams(char)
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            part.Color = Color3.fromRGB(255, 255, 255)
+            part.Material = Enum.Material.Plastic
+        end
+    end
+end
+
+local Toggle = VisualsSection:Toggle({
+    name = "Self Chams",
+    flag = "SelfChams",
+    Default = false,
+    callback = function(state)
+        enabled = state
+        local char = player.Character
+        if char then
+            if enabled then
+                applyChams(char)
+            else
+                clearChams(char)
+            end
+        end
+    end
+})
+Toggle:Colorpicker({
+    flag = "ChamsColor",
+    color = Color3.fromRGB(255,255,255),
+    callback = function(c)
+        color = c
+        if enabled and player.Character then
+            applyChams(player.Character)
+        end
+    end
+})
+
+local MultiDropdown = VisualsSection:Dropdown({
+    name = "Chams Material",
+    flag = "ChamsMaterial",
+    Default = "ForceField", -- дефолт
+    items = { "ForceField", "Plastic", "Wood", "Smooth Plastic", "Metal", "Neon", "Glass" },
+    callback = function(val)
+        if val == "ForceField" then
+            material = Enum.Material.ForceField
+        elseif val == "Plastic" then
+            material = Enum.Material.Plastic
+        elseif val == "Wood" then
+            material = Enum.Material.Wood
+        elseif val == "SmoothPlastic" then
+            material = Enum.Material.SmoothPlastic
+        elseif val == "Metal" then
+            material = Enum.Material.Metal
+        elseif val == "Neon" then
+            material = Enum.Material.Neon
+        elseif val == "Glass" then
+            material = Enum.Material.Glass
+        end
+
+        if enabled and player.Character then
+            applyChams(player.Character)
+        end
+    end
+})
+
+player.CharacterAdded:Connect(function(char)
+    task.wait(0)
+    if enabled then
+        applyChams(char)
+    end
+end)
+
 local gunChamsEnabled = false
 local chamColor = Color3.fromRGB(250, 250, 250)
 local chamMaterial = Enum.Material.Plastic
@@ -2284,6 +2874,7 @@ local MultiDropdown = VisualsSection:Dropdown({
         end
     end
 })
+
 
 local VisualsSection = VisualsTab:Section({Name = "Crosshair", Side = 2 })
 
@@ -2377,7 +2968,7 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 
 -- 🧩 Fluent UI інтеграція
-local CrosshairToggle = VisualsSection:Toggle({
+local Toggle = VisualsSection:Toggle({
     Name = "Crosshair",
     Default = false,
     Flag = "crosshair_main",
@@ -2682,4 +3273,3 @@ do
     end})
     
 end
-
