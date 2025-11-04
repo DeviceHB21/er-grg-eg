@@ -1143,7 +1143,7 @@ function Library:Create(instance, options)
     -- 🟢 Заокруглення елементів
     if ins:IsA("Frame") or ins:IsA("TextButton") or ins:IsA("TextLabel") or ins:IsA("ImageLabel") then
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 3) -- ← міняй це число для більшого/меншого округлення
+        corner.CornerRadius = UDim.new(0, 2) -- ← міняй це число для більшого/меншого округлення
         corner.Parent = ins
     end
 
