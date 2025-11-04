@@ -1753,12 +1753,6 @@ local OutlineFrame = Library:Create("UIStroke", {
 })
 Library:Themify(OutlineFrame, "accent", "Color")
 
-                    local Stroke = Library:Create( "UIStroke" , {
-                        Color = rgb(40, 40, 45);
-                        LineJoinMode = Enum.LineJoinMode.Miter;
-                        Parent = Items.FirstInline
-                    });	Library:Themify(Stroke, "inline", "Color")
-
                     Items.SecondInline = Library:Create( "Frame" , {
                         BorderColor3 = rgb(0, 0, 0);
                         Parent = Items.FirstInline;
