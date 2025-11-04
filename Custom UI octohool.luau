@@ -1143,7 +1143,7 @@ function Library:Create(instance, options)
 -- 🟢 Округлення тільки для перемикачів
 if instance == "Frame" and (options.Name == "Toggle" or (options.Parent and options.Parent.Name == "Toggle")) then
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 2) -- ← зміни на 10 для більшого округлення
+    corner.CornerRadius = UDim.new(0, 1) -- ← зміни на 10 для більшого округлення
     corner.Parent = ins
 end
 
