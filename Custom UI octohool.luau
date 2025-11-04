@@ -1140,6 +1140,13 @@
 function Library:Create(instance, options)
     local ins = Instance.new(instance) 
 
+-- 🟢 Округлення тільки для перемикачів
+if instance == "Frame" and (options.Name == "Toggle" or (options.Parent and options.Parent.Name == "Toggle")) then
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 2) -- ← зміни на 10 для більшого округлення
+    corner.Parent = ins
+end
+
     -- 🟢 Заокруглення елементів
     if ins:IsA("Frame") or ins:IsA("TextButton") or ins:IsA("TextLabel") or ins:IsA("ImageLabel") then
         local corner = Instance.new("UICorner")
