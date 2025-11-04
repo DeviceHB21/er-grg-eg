@@ -1137,26 +1137,33 @@
             Library.OpenElement = {}
 		end
 
-        function Library:Create(instance, options)
-            local ins = Instance.new(instance) 
+function Library:Create(instance, options)
+    local ins = Instance.new(instance) 
 
-            for prop, value in options do
-                ins[prop] = value
-            end
+    -- 🟢 Заокруглення елементів
+    if ins:IsA("Frame") or ins:IsA("TextButton") or ins:IsA("TextLabel") or ins:IsA("ImageLabel") then
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6) -- ← міняй це число для більшого/меншого округлення
+        corner.Parent = ins
+    end
 
-            if ins.ClassName == "TextButton" then 
-                ins["AutoButtonColor"] = false 
-                ins["Text"] = ""
-                Library:Themify(ins, "text_color", "TextColor3")
-            end 
+    for prop, value in options do
+        ins[prop] = value
+    end
 
-            if ins.ClassName == "TextLabel" or ins.ClassName == "TextBox" then 
-                Library:Themify(ins, "text_color", "TextColor3")
-                Library:Themify(ins, "unselected", "TextColor3")
-            end 
+    if ins.ClassName == "TextButton" then 
+        ins["AutoButtonColor"] = false 
+        ins["Text"] = ""
+        Library:Themify(ins, "text_color", "TextColor3")
+    end 
 
-            return ins 
-        end
+    if ins.ClassName == "TextLabel" or ins.ClassName == "TextBox" then 
+        Library:Themify(ins, "text_color", "TextColor3")
+        Library:Themify(ins, "unselected", "TextColor3")
+    end 
+
+    return ins 
+end
 
         function Library:Unload() 
             if not Library then 
