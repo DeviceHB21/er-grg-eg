@@ -1249,7 +1249,7 @@
                         TextXAlignment = Enum.TextXAlignment.Left;
                         RichText = true;
                         ZIndex = 2;
-                        TextSize = 12;
+                        TextSize = 14;
                         BackgroundColor3 = rgb(255, 255, 255)
                     });	Library:Themify(Items.StatusList, "text_color", "TextColor3")
 
@@ -1378,7 +1378,7 @@
                     TextXAlignment = Enum.TextXAlignment.Left;
                     RichText = true;
                     ZIndex = 2;
-                    TextSize = 12;
+                    TextSize = 14;
                     BackgroundColor3 = rgb(255, 255, 255)
                 });	Library:Themify(Items.Title, "text_color", "BackgroundColor3")
 
