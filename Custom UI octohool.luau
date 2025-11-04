@@ -1745,6 +1745,14 @@ end
                         BackgroundColor3 = rgb(0, 0, 0)
                     });
 
+local OutlineFrame = Library:Create("UIStroke", {
+    Parent = Items.FirstInline,
+    ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+    Thickness = 1.5, -- товщина обводки
+    Color = themes.preset.accent
+})
+Library:Themify(OutlineFrame, "accent", "Color")
+
                     local Stroke = Library:Create( "UIStroke" , {
                         Color = rgb(40, 40, 45);
                         LineJoinMode = Enum.LineJoinMode.Miter;
