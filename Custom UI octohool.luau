@@ -1733,24 +1733,24 @@ end
                         BackgroundColor3 = rgb(255, 255, 255)
                     });
 
-                    Items.FirstInline = Library:Create( "Frame" , {
-                        BorderColor3 = rgb(0, 0, 0);
-                        Parent = Items.Holder;
-                        Name = "\0";
-                        BackgroundTransparency = 1;
-                        Position = dim2(0, 6, 0, 26);
-                        Size = dim2(1, -12, 1, -36);
-                        ZIndex = 2;
-                        BorderSizePixel = 0;
-                        BackgroundColor3 = rgb(0, 0, 0)
-                    });
+-- 🟢 Контейнер для головного фрейму з outline
+Items.Holder = Library:Create("Frame", {
+    Parent = Library.Items;
+    BackgroundTransparency = 0; -- тепер є поверхня для UIStroke
+    Name = "\0";
+    Visible = true;
+    BorderColor3 = rgb(0, 0, 0);
+    Size = dim2(1, 0, 1, 0);
+    BorderSizePixel = 0;
+    BackgroundColor3 = rgb(15, 15, 20); -- темний фон
+})
 
--- 🟣 Outline головного вікна
+-- 🟣 Outline головного фрейму (привʼязаний до Accent)
 local OutlineFrame = Library:Create("UIStroke", {
-    Parent = Items.Holder, -- ✅ ставимо на сам головний фрейм
-    ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-    Thickness = 1.5, -- товщина лінії
-    Color = themes.preset.accent
+    Parent = Items.Holder;
+    ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
+    Thickness = 1.5; -- товщина обводки
+    Color = themes.preset.accent;
 })
 Library:Themify(OutlineFrame, "accent", "Color")
 
