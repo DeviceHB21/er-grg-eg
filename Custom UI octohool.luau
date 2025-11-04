@@ -1745,10 +1745,11 @@ end
                         BackgroundColor3 = rgb(0, 0, 0)
                     });
 
+-- 🟣 Outline головного вікна
 local OutlineFrame = Library:Create("UIStroke", {
-    Parent = Items.FirstInline,
+    Parent = Items.Holder, -- ✅ ставимо на сам головний фрейм
     ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-    Thickness = 1.5, -- товщина обводки
+    Thickness = 1.5, -- товщина лінії
     Color = themes.preset.accent
 })
 Library:Themify(OutlineFrame, "accent", "Color")
