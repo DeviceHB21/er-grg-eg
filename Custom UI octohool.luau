@@ -1505,7 +1505,7 @@
                     TextXAlignment = Enum.TextXAlignment.Left;
                     RichText = true;
                     ZIndex = 2;
-                    TextSize = 12;
+                    TextSize = 14;
                     BackgroundColor3 = rgb(255, 255, 255)
                 });	Library:Themify(Items.StatusList, "text_color", "BackgroundColor3")
 
@@ -1814,7 +1814,7 @@
                         Position = dim2(0, -1, 0, -8);
                         BorderColor3 = rgb(0, 0, 0);
                         AutomaticSize = Enum.AutomaticSize.XY;
-                        TextSize = 12;
+                        TextSize = 14;
                         BackgroundColor3 = rgb(255, 255, 255)
                     });
 
@@ -1908,7 +1908,7 @@
                         TextXAlignment = Enum.TextXAlignment.Left;
                         FontFace = Fonts[themes.preset.font];
                         ZIndex = 2;
-                        TextSize = 12;
+                        TextSize = 14;
                         BackgroundColor3 = themes.preset.accent
                     });	Library:Themify(Items.Text, "accent", "TextColor3")
 
@@ -2068,7 +2068,7 @@
                         Position = dim2(0, 0, 0.5, 0);
                         BorderColor3 = rgb(0, 0, 0);
                         ZIndex = 2;
-                        TextSize = 12;
+                        TextSize = 14;
                         BackgroundColor3 = rgb(255, 255, 255)
                     }); Library:Themify(Items.ButtonTitle, "unselected", "TextColor3")
 
@@ -2310,7 +2310,7 @@
                         Position = dim2(0, 0, 0, 5);
                         BorderColor3 = rgb(0, 0, 0);
                         ZIndex = 2;
-                        TextSize = 12;
+                        TextSize = 14;
                         BackgroundColor3 = rgb(255, 255, 255)
                     });
 
@@ -2456,7 +2456,7 @@
                         Position = dim2(0.5, 0, 0.5, 0);
                         BorderColor3 = rgb(0, 0, 0);
                         ZIndex = 2;
-                        TextSize = 12;
+                        TextSize = 14;
                         BackgroundColor3 = rgb(255, 255, 255)
                     });
 
