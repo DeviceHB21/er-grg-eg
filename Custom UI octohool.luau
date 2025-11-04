@@ -55,7 +55,7 @@
             tooltip = rgb(73, 73, 73),
             misc_2 = rgb(23, 23, 28),
             font = "ProggyClean",
-            textsize = 12
+            textsize = 16
         },
         utility = {},
         gradients = {
