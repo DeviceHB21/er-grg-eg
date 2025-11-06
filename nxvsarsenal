@@ -11,7 +11,7 @@ local Window = Library:Window({
     }
 })
 
-local Watermark = Library:Watermark("NexusVision.lua | Apocalypse Rising 2 | V2.1a         ", {"124514804428585", Color3.fromRGB()})
+local Watermark = Library:Watermark("NexusVision.lua | Arsenal | V1.0 Release         ", {"124514804428585", Color3.fromRGB()})
 local KeybindList = Library:KeybindList()
 
 --Watermark:SetVisibility(false)
