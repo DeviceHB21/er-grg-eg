@@ -8,7 +8,7 @@ local ThemeManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/
 local SaveManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/DeviceHB21/Custom-Liblinoria/refs/heads/main/addons/SaveManager.lua'))()
 
 local Window = Library:CreateWindow({
-    Title = 'NexusVision | AR2 |v1.2 Release',
+    Title = 'NexusVision | AR2 | v1.2 Release',
     Center = true,
     AutoShow = true,
     TabPadding = 8,
