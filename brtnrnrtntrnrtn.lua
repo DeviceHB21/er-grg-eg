@@ -411,6 +411,31 @@ task.spawn(function()
     })
 end)
 
+    local Game = Tabs.Misc:AddRightGroupbox('Game')
+
+-- Функція FPS Rate
+local function FPSRate(cap)
+    if setfpscap then
+        setfpscap(cap)
+    elseif setfpslimit then
+        setfpslimit(cap)
+    end
+end
+
+-- 🔥 UNLOCK FPS TOGGLE
+Game:AddToggle("UnlockFPS", {
+    Text = "Unlock FPS",
+    Default = false,
+
+    Callback = function(state)
+        if state then
+            FPSRate(999)   -- 🔓 Включено — максимум FPS
+        else
+            FPSRate(60)    -- 🔒 Вимкнено — стандартний FPS
+        end
+    end
+})
+
     local Misc = Tabs.Misc:AddRightGroupbox('Misc')
 
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
