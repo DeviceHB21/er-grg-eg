@@ -1265,6 +1265,15 @@ LeftGroupBox:AddSlider('dis chek', {
     end
 })
 
+LeftGroupBox:AddButton({
+    Text = "Map Esp",
+    DoubleClick = false,
+    Func = function()
+        local interfaceMap = require(game:GetService("ReplicatedFirst").Framework).Interface.Map
+        interfaceMap:EnableGodview()
+    end
+})
+
 local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Esp Settings')
 
 LeftGroupBox:AddSlider('max hp visibility', {
