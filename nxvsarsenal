@@ -424,6 +424,44 @@ task.spawn(function()
     })
 end)
 
+    local Game = Tabs.Misc:AddLeftGroupbox("Game")
+
+local Camera = workspace.CurrentCamera
+
+local FOVSettings = {
+    Enabled = false,
+    Value = 70
+}
+Game:AddToggle("FOVToggle", {
+    Text = "Enable FOV",
+    Default = false,
+
+    Callback = function(v)
+        FOVSettings.Enabled = v
+        
+        if not v then
+            -- коли виключаєш → ставимо стандартний FOV
+            Camera.FieldOfView = 70
+        end
+    end
+})
+Game:AddSlider("FOVSlider", {
+    Text = "FOV",
+    Default = 70,
+    Min = 40,
+    Max = 120,
+    Rounding = 0,
+
+    Callback = function(num)
+        FOVSettings.Value = num
+    end
+})
+game:GetService("RunService").RenderStepped:Connect(function()
+    if FOVSettings.Enabled then
+        Camera.FieldOfView = FOVSettings.Value
+    end
+end)
+
     local WVRWRE = Tabs.Misc:AddRightGroupbox("Camera Settings")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -1074,7 +1112,129 @@ Fov:AddSlider("FOVThickness", {
     end
 })
 
-local Gun = Tabs.Combat:AddLeftGroupbox('Gun Mods')
+local Gun = Tabs.Combat:AddRightGroupbox('Gun Mods')
+
+Gun:AddToggle('InfiniteAmmo1', {
+    Text = 'Infinite Ammo v1',
+
+    Default = false,
+    Callback = function(v)
+        game:GetService("ReplicatedStorage").wkspc.CurrentCurse.Value = v and "Infinite Ammo" or ""
+    end
+})
+
+local SettingsInfinite = false
+
+Gun:AddToggle('InfiniteAmmo2', {
+	Text = 'Infinite Ammo v2',
+
+	Default = false,
+	Callback = function(K)
+        SettingsInfinite = K
+        if SettingsInfinite then
+            game:GetService("RunService").Stepped:Connect(function()
+                if SettingsInfinite then
+                    pcall(function()
+                        local pg = game:GetService("Players").LocalPlayer.PlayerGui
+                        pg.GUI.Client.Variables.ammocount.Value = 99
+                        pg.GUI.Client.Variables.ammocount2.Value = 99
+                    end)
+                end
+            end)
+        end
+	end,
+})
+
+Gun:AddToggle('FastReload', {
+	Text = 'Fast Reload',
+
+	Default = false,
+	Callback = function(x)
+        for _, v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
+            if v:FindFirstChild("ReloadTime") then
+                if x then
+                    originalValues.ReloadTime[v] = originalValues.ReloadTime[v] or v.ReloadTime.Value
+                    v.ReloadTime.Value = 0.01
+                else
+                    v.ReloadTime.Value = originalValues.ReloadTime[v] or 0.8
+                end
+            end
+            
+            if v:FindFirstChild("EReloadTime") then
+                if x then
+                    originalValues.EReloadTime[v] = originalValues.EReloadTime[v] or v.EReloadTime.Value
+                    v.EReloadTime.Value = 0.01
+                else
+                    v.EReloadTime.Value = originalValues.EReloadTime[v] or 0.8
+                end
+            end
+        end
+	end
+})
+
+Gun:AddToggle('AlwaysAuto', {
+	Text = 'Always Auto',
+
+	Default = false,
+	Callback = function(state)
+        for _, v in pairs(game.ReplicatedStorage.Weapons:GetDescendants()) do
+            if v.Name == "Auto" or v.Name == "AutoFire" or v.Name == "Automatic" or v.Name == "AutoShoot" or v.Name == "AutoGun" then
+                if state then
+                    originalValues.Auto[v] = originalValues.Auto[v] or v.Value
+                    v.Value = true
+                else
+                    v.Value = originalValues.Auto[v] or false
+                end
+            end
+        end
+	end
+})
+
+local NoSpreadValue = 0
+
+-- 🟦 ПЕРЕМИКАЧ No Spread
+Gun:AddToggle('NoSpread_Toggle', {
+    Text = 'No Spread',
+    Default = false,
+
+    Callback = function(state)
+        for _, v in pairs(game.ReplicatedStorage.Weapons:GetDescendants()) do
+            if v.Name == "MaxSpread" or v.Name == "Spread" or v.Name == "SpreadControl" then
+
+                if state then
+                    -- save original
+                    originalValues.Spread[v] = originalValues.Spread[v] or v.Value
+                    -- convert slider (0–100) to game value (0–1)
+                    v.Value = NoSpreadValue / 100
+                else
+                    v.Value = originalValues.Spread[v] or 1
+                end
+            end
+        end
+    end
+})
+
+-- 🟦 СЛАЙДЕР No Spread (0–100)
+Gun:AddSlider('NoSpread_Slider', {
+    Text = 'Spread Amount',
+    Default = 0,
+    Min = 0,
+    Max = 100,
+    Rounding = 0,
+
+    Callback = function(v)
+        NoSpreadValue = v
+
+        -- автооновлення спреду якщо toggle включений
+        if Toggles.NoSpread_Toggle.Value then
+            for _, prop in pairs(game.ReplicatedStorage.Weapons:GetDescendants()) do
+                if prop.Name == "MaxSpread" or prop.Name == "Spread" or prop.Name == "SpreadControl" then
+                    prop.Value = NoSpreadValue / 100
+                end
+            end
+        end
+    end
+})
 
 local recoilValue = 0
 local recoilEnabled = false
@@ -1091,7 +1251,6 @@ local WeaponsFolder = RepStorage:WaitForChild("Weapons")
 Gun:AddToggle('recoil_toggle', {
     Text = 'Recoil Control',
     Default = false,
-    Tooltip = 'Вимикає віддачу та розкид',
     Callback = function(state)
         recoilEnabled = state
 
@@ -1126,14 +1285,9 @@ Gun:AddSlider('recoil_slider', {
     end
 })
 
--- ===========================================
--- 🔥 FIRE RATE — ТОГЛ + СЛАЙДЕР
--- ===========================================
-
 Gun:AddToggle('firerate_toggle', {
     Text = 'Fire Rate Modifier',
     Default = false,
-    Tooltip = 'Збільшує швидкість стрільби',
     Callback = function(state)
         fireRateEnabled = state
 
@@ -1232,7 +1386,7 @@ task.spawn(function()
     --------------------------------------------------------------------
     -- 🧠 FLUENT RENEWED UI (HEAD EXPANDER)
     --------------------------------------------------------------------
-local HeadExpander = Tabs.Combat:AddRightGroupbox('Head Expander')
+local HeadExpander = Tabs.Combat:AddLeftGroupbox('Head Expander')
 
     -- 🟢 Toggle
     HeadExpander:AddToggle('HeadExpand_Toggle', {
