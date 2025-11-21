@@ -1,169 +1,66 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/NightFallScript/Custom-Lib/refs/heads/main/UtopiaModifedSource.lua"))()
+-- New example script written by wally
+-- You can suggest changes with a pull request or something
 
-local Window = Library:Window({
-    Name = "N E X U S V I S I O N",
-    GradientTitle = {
-        Enabled = true,
-        Start = Color3.fromRGB(0, 0, 0),
-        Middle = Color3.fromRGB(61, 0, 0),
-        End = Color3.fromRGB(184, 0, 0),
-        Speed = 0.4
-    }
+local repo = 'https://github.com/DeviceHB21/Custom-Liblinoria/tree/main'
+
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/DeviceHB21/Custom-Liblinoria/refs/heads/main/denlib.lua'))()
+local ThemeManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/DeviceHB21/Custom-Liblinoria/refs/heads/main/addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/DeviceHB21/Custom-Liblinoria/refs/heads/main/addons/SaveManager.lua'))()
+
+local Window = Library:CreateWindow({
+    Title = 'NexusVision | Arsenal |v1.3',
+    Center = true,
+    AutoShow = true,
+    TabPadding = 8,
+    MenuFadeTime = 0.2
 })
 
-local Watermark = Library:Watermark("NexusVision.lua | Arsenal | V1.0 Release         ", {"124514804428585", Color3.fromRGB()})
-local KeybindList = Library:KeybindList()
+local Tabs = {
+    Combat = Window:AddTab('Combat'),
+    Visuals = Window:AddTab('Visuals'),
+    Misc = Window:AddTab('Misc'),
+    ['UI Settings'] = Window:AddTab('UI Settings'),
+}
 
---Watermark:SetVisibility(false)
---KeybindList:SetVisibility(false)
+local LeftGroupBox = Tabs.Misc:AddLeftGroupbox('Player')
 
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
-local CombatTab = Window:Page({Name = "Combat", Columns = 2  })
-local VisualsTab = Window:Page({Name = "Visuals", Columns = 2  })
-local MiscTab = Window:Page({Name = "Misc", Columns = 2  })
-local SettingsTab = Window:Page({Name = "Settings", Columns = 2 })
+local LP = Players.LocalPlayer
 
-local AntiAim = MiscTab:Section({ Name = "Anti Aim", Side = 2})
-
--- Anti-Aim Variables
-local AntiAim_Toggle = false
-local NoAnims_Toggle = false
-local Pitch_Type = "Custom"
-local CustomPitch_Value = 0
-local Yaw_Type = "Custom"
-local AntiAim_Speed = 0
-local CustomYaw_Value = 0
-local backrotation = CFrame.new(0, 0, 0)
-
-
-local function ApplyAntiAim()
-    if AntiAim_Toggle then
-        if Yaw_Type == "Custom" then
-            characterrotate(CFrame.new(CustomYaw_Value, 0, 0))
-        elseif Yaw_Type == "Jitter" then
-            if game.Players.LocalPlayer.Character then
-                game.Players.LocalPlayer.Character:WaitForChild("Humanoid").AutoRotate = false
-                local spin = Instance.new('BodyAngularVelocity', game.Players.LocalPlayer.Character:FindFirstChild('HumanoidRootPart'))
-                spin.AngularVelocity = Vector3.new(0, math.random(-60000, 55000), 0)
-                spin.MaxTorque = Vector3.new(0, 35000, 0)
-                wait()
-                spin:Destroy()
-            end
-        elseif Yaw_Type == "Spin" then
-            if game.Players.LocalPlayer.Character then
-                game.Players.LocalPlayer.Character:WaitForChild("Humanoid").AutoRotate = false
-                local spin = Instance.new('BodyAngularVelocity', game.Players.LocalPlayer.Character:FindFirstChild('HumanoidRootPart'))
-                spin.AngularVelocity = Vector3.new(0, AntiAim_Speed * 100, 0)
-                spin.MaxTorque = Vector3.new(0, 23000, 0)
-                wait()
-                spin:Destroy()
-            end
-        elseif Yaw_Type == "Back" then
-            characterrotate((workspace.CurrentCamera.CFrame * backrotation).p)
-        end
-    end
-end
-
-
-
-local AntiAimToggle = AntiAim:Toggle({
-    Name = "AntiAim ",
-    Default = false,
-    Flag = "AntiAim_Toggle",
-    Callback = function(value)
-        AntiAim_Toggle = value
-    end
-})
-
-
-local NoAnimsToggle = AntiAim:Toggle({
-    Name = "Disable Animations",
-    Default = false,
-    Flag = "NoAnims_Toggle",
-    Callback = function(value)
-        NoAnims_Toggle = value
-    end
-})
-
-
-local YawDropdown = AntiAim:Dropdown({
-    Name = "Yaw Type",
-    Items = {"Custom", "Jitter", "Spin", "Back"},
-    Default = "Custom",
-    Flag = "Yaw_Type",
-    Callback = function(selected)
-        Yaw_Type = selected
-    end
-})
-
-
-local SpinSpeedSlider = AntiAim:Slider({
-    Name = "Spin Speed",
-    Flag = "AntiAim_Speed",
-    Min = 0,
-    Max = 100,
-    Default = 0,
-    Decimal = 1,
-    Callback = function(value)
-        AntiAim_Speed = value
-    end
-})
-
-
-local YawSlider = AntiAim:Slider({
-    Name = "Yaw Value",
-    Flag = "CustomYaw_Value",
-    Min = 0,
-    Max = 360,
-    Default = 0,
-    Decimal = 2,
-    Callback = function(value)
-        CustomYaw_Value = value
-    end
-})
-
-
-game:GetService("RunService").Heartbeat:Connect(function()
-    ApplyAntiAim()
-end)
-
-local Movements = MiscTab:Section({ Name = "Movements",     Side = 1 })
+-----------------------------------------------------------
+--                   🔥  NOCLIP
+-----------------------------------------------------------
 
 local noclipEnabled = false
 local noclipConnection
 
-local NoClipToggle = Movements:Toggle({
-    Name = "NoClip",
+LeftGroupBox:AddToggle("EnableNoClip", {
+    Text = "NoClip",
     Default = false,
-    Flag = "EnableNoClip",
     Callback = function(state)
-        local player = game:GetService("Players").LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
+        noclipEnabled = state
+        local character = LP.Character or LP.CharacterAdded:Wait()
 
         if state then
-            noclipEnabled = true
-
-            -- 🔁 Основний цикл NoClip
-            noclipConnection = game:GetService("RunService").Stepped:Connect(function()
-                if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-                for _, part in pairs(character:GetDescendants()) do
+            noclipConnection = RunService.Stepped:Connect(function()
+                if not character then return end
+                for _, part in ipairs(character:GetDescendants()) do
                     if part:IsA("BasePart") and part.CanCollide then
                         part.CanCollide = false
                     end
                 end
             end)
         else
-            noclipEnabled = false
-
-            -- 🛑 Вимикаємо цикл
             if noclipConnection then
                 noclipConnection:Disconnect()
                 noclipConnection = nil
             end
 
-            -- 🔁 Повертаємо колізії
             if character then
-                for _, part in pairs(character:GetDescendants()) do
+                for _, part in ipairs(character:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.CanCollide = true
                     end
@@ -173,154 +70,666 @@ local NoClipToggle = Movements:Toggle({
     end
 })
 
-local jumpPower = 25 -- стандартне значення сили стрибка
-local jumpConnection -- збереження підписки
+    -- No Slowdown
+    LeftGroupBox:AddToggle('NoSlowdown_Toggle', {
+        Text = 'No Slowdown',
+        Default = false,
+        Callback = function(Value)
+            MovementFlags.NoSlowdown = Value
+        end
+    })
+-----------------------------------------------------------
+--                   🔥  INFINITE JUMP
+-----------------------------------------------------------
 
-local InfiniteJumpToggle = Movements:Toggle({
-    Name = "Infinite Jump",
+local jumpPower = 25
+local jumpConnection
+
+LeftGroupBox:AddToggle("EnableInfiniteJump", {
+    Text = "Infinite Jump",
     Default = false,
-    Flag = "EnableInfiniteJump",
     Callback = function(state)
-        local player = game:GetService("Players").LocalPlayer
-        local userInputService = game:GetService("UserInputService")
-
         if state then
-            -- 🔁 створюємо підписку на JumpRequest
-            jumpConnection = userInputService.JumpRequest:Connect(function()
-                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                    humanoid.JumpPower = jumpPower
+            jumpConnection = UIS.JumpRequest:Connect(function()
+                local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                    hum.JumpPower = jumpPower
                 end
             end)
         else
-            -- 🛑 вимикаємо підписку
             if jumpConnection then
                 jumpConnection:Disconnect()
                 jumpConnection = nil
             end
-            -- повертаємо стандартне значення
-            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.JumpPower = 50 -- стандарт для Roblox
-            end
+
+            local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.JumpPower = 50 end
         end
     end
 })
 
--- 🎚️ Слайдер сили стрибка
-local JumpPowerSlider = Movements:Slider({
-    Name = "Jump Power",
-    Flag = "JumpPower_Value",
+LeftGroupBox:AddSlider("InfiniteJumpPower", {
+    Text = "Jump Power",
+    Default = 25,
     Min = 0,
     Max = 100,
-    Default = 25,
-    Decimal = 1,
-    Callback = function(value)
-        jumpPower = value
-        -- 🧠 міняємо силу стрибка лише якщо InfiniteJump увімкнено
-        local player = game:GetService("Players").LocalPlayer
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid and InfiniteJumpToggle.CurrentValue then
-            humanoid.JumpPower = jumpPower
+    Rounding = 1,
+    Callback = function(v)
+        jumpPower = v
+        local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+        if hum and Toggles.EnableInfiniteJump.Value then
+            hum.JumpPower = jumpPower
         end
     end
 })
 
-local fallSpeedEnabled = false
-local fallSpeedValue = 1 -- стандартна швидкість падіння
+-----------------------------------------------------------
+--                   🔥  FALL SPEED
+-----------------------------------------------------------
 
--- 🔽 Перемикач Fall Speed
-local FallSpeedToggle = Movements:Toggle({
-    Name = "Fall Speed Control",
+local fallSpeedEnabled = false
+local fallSpeedValue = 1
+
+LeftGroupBox:AddToggle("EnableFallSpeed", {
+    Text = "Fall Speed Control",
     Default = false,
-    Flag = "EnableFallSpeed",
-    Callback = function(state)
-        fallSpeedEnabled = state
+    Callback = function(v)
+        fallSpeedEnabled = v
     end
 })
 
--- 🎚️ Слайдер швидкості падіння
-local FallSpeedSlider = Movements:Slider({
-    Name = "Fall Speed",
-    Flag = "FallSpeed_Value",
+LeftGroupBox:AddSlider("FallSpeedSlider", {
+    Text = "Fall Speed",
+    Default = 1,
     Min = 0,
     Max = 10,
-    Default = 1,
-    Decimal = 1,
-    Callback = function(value)
-        fallSpeedValue = value
+    Rounding = 1,
+    Callback = function(v)
+        fallSpeedValue = v
     end
 })
 
--- 🧠 Логіка контролю падіння
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
 RunService.Heartbeat:Connect(function()
-    if fallSpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = LocalPlayer.Character.HumanoidRootPart
-
-        -- якщо персонаж падає вниз, уповільнюємо падіння
-        if hrp.Velocity.Y < 0 then
+    if fallSpeedEnabled then
+        local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and hrp.Velocity.Y < 0 then
             hrp.Velocity = Vector3.new(hrp.Velocity.X, -fallSpeedValue, hrp.Velocity.Z)
         end
     end
 end)
 
-local speedValue = 100 -- стандартне значення
-local connection -- збереження підписки для подальшого відключення
+-----------------------------------------------------------
+--                   🔥  SPEED HACK
+-----------------------------------------------------------
 
-local SpeedHackToggle = Movements:Toggle({
-    Name = "Speed Hack",
+local speedValue = 100
+local speedConnection
+
+LeftGroupBox:AddToggle("EnableSpeedHack", {
+    Text = "Speed Hack",
     Default = false,
-    Flag = "EnableSpeedHack",
     Callback = function(state)
-        local player = game:GetService("Players").LocalPlayer
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if not humanoid then return end
+        local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+        if not hum then return end
 
         if state then
-            humanoid.WalkSpeed = speedValue
-            -- 🔁 створюємо підписку, щоб підтримувати швидкість
-            connection = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-                if humanoid.WalkSpeed ~= speedValue then
-                    humanoid.WalkSpeed = speedValue
+            hum.WalkSpeed = speedValue
+            speedConnection = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+                if hum.WalkSpeed ~= speedValue then
+                    hum.WalkSpeed = speedValue
                 end
             end)
         else
-            -- 🛑 вимикаємо підписку, щоб не заважала
-            if connection then
-                connection:Disconnect()
-                connection = nil
+            if speedConnection then
+                speedConnection:Disconnect()
+                speedConnection = nil
             end
-            humanoid.WalkSpeed = 16
+            hum.WalkSpeed = 16
         end
     end
 })
 
--- 🎚️ Слайдер швидкості
-local SpeedHackSlider = Movements:Slider({
-    Name = "Speed Value",
-    Flag = "SpeedHack_Value",
+LeftGroupBox:AddSlider("SpeedHackValue", {
+    Text = "Speed Value",
+    Default = 100,
     Min = 10,
     Max = 100,
-    Default = 100,
-    Decimal = 1,
-    Callback = function(value)
-        speedValue = value
-        local player = game:GetService("Players").LocalPlayer
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid and SpeedHackToggle.CurrentValue then
-            humanoid.WalkSpeed = speedValue
+    Rounding = 1,
+    Callback = function(v)
+        speedValue = v
+        local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+        if hum and Toggles.EnableSpeedHack.Value then
+            hum.WalkSpeed = speedValue
         end
     end
 })
 
-local Movements = MiscTab:Section({ Name = "Camera Settings",     Side = 2 })
+-----------------------------------------------------------
+--                   🔥  JUMP HACK
+-----------------------------------------------------------
 
-local AimbotSection = CombatTab:Section({ Name = "Aim Bot", Side = 1})
+-----------------------------------------------------------
+-- 🔁 Auto-update R6/R15 on respawn
+-----------------------------------------------------------
+
+LP.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid")
+    
+    -- якщо BHOP був увімкнений — включити назад
+    if bhopEnabled and Toggles.EnableBhopSimple.Value then
+        
+        local hum = char:WaitForChild("Humanoid")
+        hum.WalkSpeed = 16
+        
+        jumpConnection = hum.Jumping:Connect(function(j)
+            table.insert(jumpCount, j)
+            hum.WalkSpeed = hum.WalkSpeed + bhopBoost
+        end)
+    end
+end)
+
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local UIS = game:GetService("UserInputService")
+    local Workspace = game:GetService("Workspace")
+
+    local LocalPlayer = Players.LocalPlayer
+
+    -- ⚙️ Стейт
+    local MovementFlags = {
+        AutoJump = false,
+        NoFallDamage = false,
+        AutoSprint = false,
+        WallClimb = false,
+        WalkOnWater = false, -- і вода, і лава
+        NoSlowdown = false,
+    }
+
+    local SprintSpeed = 24
+    local ClimbSpeed = 20
+
+    local CurrentHumanoid
+    local RootPart
+    local DefaultWalkSpeed = 16
+    local DefaultHipHeight = 0
+
+    local lastHealth = nil
+    local lastState = nil
+
+    local healthConnection
+    local stateConnection
+
+    -- 🧩 оновлення поточного персонажа
+    local function SetupCharacter(char)
+        if not char then return end
+
+        CurrentHumanoid = char:FindFirstChildOfClass("Humanoid")
+        RootPart = char:FindFirstChild("HumanoidRootPart")
+
+        if not CurrentHumanoid or not RootPart then return end
+
+        DefaultWalkSpeed = CurrentHumanoid.WalkSpeed
+        DefaultHipHeight = CurrentHumanoid.HipHeight
+        lastHealth = CurrentHumanoid.Health
+
+        -- відключаємо старі конекти
+        if healthConnection then healthConnection:Disconnect() end
+        if stateConnection then stateConnection:Disconnect() end
+
+        -- відслідковуємо стейт (Freefall/Running і тд)
+        stateConnection = CurrentHumanoid.StateChanged:Connect(function(old, new)
+            lastState = new
+        end)
+
+        -- No Fall Damage по Humanoid.Health
+        healthConnection = CurrentHumanoid.HealthChanged:Connect(function(newHealth)
+            if not MovementFlags.NoFallDamage then
+                lastHealth = newHealth
+                return
+            end
+
+            if lastHealth and newHealth < lastHealth then
+                -- якщо було падіння: останній стейт Freefall або FallingDown/Ragdoll
+                if lastState == Enum.HumanoidStateType.Freefall
+                or lastState == Enum.HumanoidStateType.FallingDown
+                or lastState == Enum.HumanoidStateType.Ragdoll then
+                    -- повертаємо хп
+                    CurrentHumanoid.Health = lastHealth
+                    return
+                end
+            end
+
+            lastHealth = newHealth
+        end)
+    end
+
+    -- підписуємось на поточного персонажа
+    if LocalPlayer.Character then
+        SetupCharacter(LocalPlayer.Character)
+    end
+
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        char:WaitForChild("Humanoid", 10)
+        char:WaitForChild("HumanoidRootPart", 10)
+        SetupCharacter(char)
+    end)
+
+    ----------------------------------------------------------------
+    -- 🔁 ГОЛОВНИЙ РУХОВИЙ ЛУП (універсальний)
+    ----------------------------------------------------------------
+    RunService.RenderStepped:Connect(function(dt)
+        if not CurrentHumanoid or not RootPart then return end
+
+        -- ==== AutoSprint + NoSlowdown ====
+        local targetSpeed = DefaultWalkSpeed
+
+        if MovementFlags.AutoSprint then
+            targetSpeed = SprintSpeed
+        end
+
+        if MovementFlags.NoSlowdown then
+            -- якщо гра намагається урізати швидкість — повертаємо
+            if CurrentHumanoid.WalkSpeed < targetSpeed then
+                CurrentHumanoid.WalkSpeed = targetSpeed
+            end
+        else
+            -- якщо NoSlowdown вимкнено, але AutoSprint увімкнено — просто ставимо спринт
+            if MovementFlags.AutoSprint then
+                CurrentHumanoid.WalkSpeed = targetSpeed
+            else
+                CurrentHumanoid.WalkSpeed = DefaultWalkSpeed
+            end
+        end
+
+        -- ==== AutoJump ====
+        if MovementFlags.AutoJump then
+            if CurrentHumanoid.FloorMaterial ~= Enum.Material.Air then
+                CurrentHumanoid.Jump = true
+            end
+        end
+
+        -- ==== Wall Climb ====
+        if MovementFlags.WallClimb then
+            -- якщо ти тиснеш W і впираєшся в стіну — лізеш вверх
+            if UIS:IsKeyDown(Enum.KeyCode.W) then
+                local cam = Workspace.CurrentCamera
+                local direction = cam.CFrame.LookVector
+
+                local rayParams = RaycastParams.new()
+                rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                rayParams.FilterDescendantsInstances = { LocalPlayer.Character }
+
+                local result = Workspace:Raycast(RootPart.Position, direction * 3, rayParams)
+
+                if result and result.Instance and CurrentHumanoid.FloorMaterial == Enum.Material.Air then
+                    -- піднімаємось догори
+                    RootPart.Velocity = Vector3.new(RootPart.Velocity.X, ClimbSpeed, RootPart.Velocity.Z)
+                end
+            end
+        end
+
+        -- ==== Walk on Water / Lava ====
+        if MovementFlags.WalkOnWater then
+            local rayParams = RaycastParams.new()
+            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+            rayParams.FilterDescendantsInstances = { LocalPlayer.Character }
+
+            -- дивимось що під нами
+            local result = Workspace:Raycast(RootPart.Position, Vector3.new(0, -6, 0), rayParams)
+
+            if result and result.Instance then
+                local mat = result.Material
+                local name = (result.Instance.Name or ""):lower()
+
+                local isWater = mat == Enum.Material.Water or name:find("water")
+                local isLava = name:find("lava")
+
+                if isWater or isLava then
+                    -- тримаємося на поверхні
+                    CurrentHumanoid.HipHeight = 5
+                    RootPart.Velocity = Vector3.new(RootPart.Velocity.X, 0, RootPart.Velocity.Z)
+                else
+                    CurrentHumanoid.HipHeight = DefaultHipHeight
+                end
+            else
+                CurrentHumanoid.HipHeight = DefaultHipHeight
+            end
+        else
+            if CurrentHumanoid.HipHeight ~= DefaultHipHeight then
+                CurrentHumanoid.HipHeight = DefaultHipHeight
+            end
+        end
+    end)
+
+    -- Wall Climb
+    LeftGroupBox:AddToggle('WallClimb_Toggle', {
+        Text = 'Wall Climb',
+        Default = false,
+        Callback = function(Value)
+            MovementFlags.WallClimb = Value
+        end
+    })
+
+    LeftGroupBox:AddSlider('ClimbSpeed_Slider', {
+        Text = 'Climb Speed',
+        Default = 20,
+        Min = 5,
+        Max = 60,
+        Rounding = 0,
+        Callback = function(Value)
+            ClimbSpeed = Value
+        end
+    })
+end)
+
+    local WVRWRE = Tabs.Misc:AddRightGroupbox("Camera Settings")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local LP = Players.LocalPlayer
+
+local CamSettings = {
+    ShakeRemove      = false,
+    ForceFirstPerson = false,
+    NoCollision      = false,
+
+    EnableFOV        = false,
+    FOV              = 70,
+
+    EnableCamSpeed   = false,
+    CamSpeed         = 1,
+
+    EnableCustomSens = false,
+    CustomSens       = 1
+}
+
+--------------------------------------------------------
+-- 🔥 SHAKE REMOVE
+--------------------------------------------------------
+local function RemoveShake()
+    for _, v in pairs(Camera:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("Vector3Value") then
+            v.Value = 0
+        end
+    end
+end
+
+--------------------------------------------------------
+-- 🔥 FIXED NO CAMERA COLLISION (2025)
+--------------------------------------------------------
+local function NoCamClipLoop()
+    if not CamSettings.NoCollision then return end
+
+    local head = LP.Character and LP.Character:FindFirstChild("Head")
+    if not head then return end
+
+    local camPos = Camera.CFrame.Position
+    local dir = (camPos - head.Position)
+
+    local ray = Ray.new(head.Position, dir)
+    local hit, pos = workspace:FindPartOnRay(ray, LP.Character)
+
+    if hit then
+        Camera.CFrame = CFrame.new(pos)
+    end
+end
+
+RunService.RenderStepped:Connect(NoCamClipLoop)
+
+--------------------------------------------------------
+-- 🔥 CAMERA UPDATE LOOP
+--------------------------------------------------------
+RunService.RenderStepped:Connect(function()
+
+    -- Shake Remove
+    if CamSettings.ShakeRemove then
+        RemoveShake()
+    end
+
+    -- First Person
+    if CamSettings.ForceFirstPerson and LP.Character and LP.Character:FindFirstChild("Head") then
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, LP.Character.Head.Position)
+    end
+
+    -- FOV
+    if CamSettings.EnableFOV then
+        Camera.FieldOfView = CamSettings.FOV
+    end
+
+end)
+
+--------------------------------------------------------
+-- 🎛 CUSTOM SENSITIVITY + CAMERA SPEED
+--------------------------------------------------------
+UIS.InputChanged:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseMovement then
+        
+        if CamSettings.EnableCustomSens then
+            local sens = CamSettings.CustomSens
+            local spd = CamSettings.CamSpeed
+
+            Camera.CFrame *= CFrame.Angles(
+                -i.Delta.Y * 0.002 * sens * spd,
+                -i.Delta.X * 0.002 * sens * spd,
+                0
+            )
+        end
+    end
+end)
+
+--------------------------------------------------------
+-- 🟦 UI CONNECTIONS
+--------------------------------------------------------
+
+-- Shake Remove
+WVRWRE:AddToggle("ShakeRemove", {
+    Text = "Shake Remove",
+    Default = false,
+    Callback = function(v)
+        CamSettings.ShakeRemove = v
+    end
+})
+
+-----------------------------------
+-- 🔥 Camera Speed Toggle + Slider
+-----------------------------------
+WVRWRE:AddToggle("EnableCamSpeed", {
+    Text = "Enable Camera Speed",
+    Default = false,
+    Callback = function(v)
+        CamSettings.EnableCamSpeed = v
+    end
+})
+
+WVRWRE:AddSlider("CamSpeed", {
+    Text = "Camera Speed",
+    Default = 1,
+    Min = 0.1,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(v)
+        CamSettings.CamSpeed = v
+    end
+})
+
+-----------------------------------
+-- 🔥 Custom Sensitivity Toggle + Slider
+-----------------------------------
+WVRWRE:AddToggle("EnableCustomSens", {
+    Text = "Enable Custom Sens",
+    Default = false,
+    Callback = function(v)
+        CamSettings.EnableCustomSens = v
+    end
+})
+
+WVRWRE:AddSlider("CustomSens", {
+    Text = "Custom Sensitivity",
+    Default = 1,
+    Min = 0.1,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(v)
+        CamSettings.CustomSens = v
+    end
+})
+
+    local Anti = Tabs.Misc:AddRightGroupbox("Anti Aim")
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LP = Players.LocalPlayer
+local Char = LP.Character or LP.CharacterAdded:Wait()
+local HRP = Char:WaitForChild("HumanoidRootPart")
+local Hum = Char:WaitForChild("Humanoid")
+
+-- ===========================
+-- 🔥 ANTI AIM VARIABLES
+-- ===========================
+local AntiAim_Toggle = false
+local NoAnims_Toggle = false
+
+local Pitch_Type = "Custom"
+local CustomPitch_Value = 0
+
+local Yaw_Type = "Custom"
+local CustomYaw_Value = 0
+
+local AntiAim_Speed = 0
+local backrotation = CFrame.new(0, 0, 0)
+
+-- ===========================
+-- 🔥 ФУНКЦІЯ ВСТАНОВЛЕННЯ ПОВОРОТУ
+-- ===========================
+local function SetRotation(yaw, pitch)
+    if not HRP then return end
+
+    HRP.CFrame = CFrame.new(HRP.Position) *
+        CFrame.Angles(math.rad(pitch), math.rad(yaw), 0)
+end
+
+-- ===========================
+-- 🔥 ANTI AIM CORE
+-- ===========================
+local jitterState = false
+
+local function ApplyAntiAim()
+    if not AntiAim_Toggle then return end
+    if not HRP then return end
+
+    Hum.AutoRotate = false
+
+    local yaw = 0
+    local pitch = 0
+
+    -- ========== PITCH ==========
+    if Pitch_Type == "Custom" then
+        pitch = CustomPitch_Value
+    end
+
+    -- ========== YAW ==========
+
+    if Yaw_Type == "Custom" then
+        yaw = CustomYaw_Value
+
+    elseif Yaw_Type == "Jitter" then
+        jitterState = not jitterState
+        yaw = jitterState and -180 or 180
+
+    elseif Yaw_Type == "Spin" then
+        yaw = tick() * AntiAim_Speed * 25 % 360
+
+    elseif Yaw_Type == "Back" then
+        yaw = (workspace.CurrentCamera.CFrame.LookVector * Vector3.new(1,0,1)).Unit
+        yaw = workspace.CurrentCamera.CFrame.Y + 180
+    end
+
+    SetRotation(yaw, pitch)
+end
+
+-- ===========================
+-- ❌ DISABLE ANIMATIONS
+-- ===========================
+RunService.Stepped:Connect(function()
+    if NoAnims_Toggle and Hum then
+        
+        -- 🔹 Вимкнути AutoRotate (реалістично)
+        Hum.AutoRotate = false
+
+        -- 🔹 Вимкнути Animator (core solution)
+        local animator = Hum:FindFirstChildOfClass("Animator")
+        if animator then
+            animator:Destroy()
+        end
+
+        -- 🔹 Зупинити всі анімації
+        for _, track in ipairs(Hum:GetPlayingAnimationTracks()) do
+            track:Stop()
+        end
+    end
+end)
+
+
+-- ===========================
+-- 🔁 UPDATE LOOP
+-- ===========================
+RunService.Heartbeat:Connect(ApplyAntiAim)
+
+-----------------------------------------------------------
+--                   FLUENT UI
+-----------------------------------------------------------
+
+Anti:AddToggle("AntiAimToggle", {
+    Text = "Anti Aim",
+    Default = false,
+    Callback = function(v)
+        AntiAim_Toggle = v
+        Hum.AutoRotate = not v
+    end
+})
+
+Anti:AddToggle("DisableAnimations", {
+    Text = "Disable Animations",
+    Default = false,
+    Callback = function(v)
+        NoAnims_Toggle = v
+    end
+})
+
+Anti:AddDropdown("YawDropdown", {
+    Text = "Yaw Type",
+    Values = {"Custom", "Jitter", "Spin", "Back"},
+    Default = "Custom",
+    Callback = function(v)
+        Yaw_Type = v
+    end
+})
+
+Anti:AddSlider("YawSlider", {
+    Text = "Yaw Value",
+    Min = 0,
+    Max = 360,
+    Default = 0,
+    Rounding = 1,
+    Callback = function(v)
+        CustomYaw_Value = v
+    end
+})
+
+Anti:AddSlider("SpinSpeedSlider", {
+    Text = "Spin Speed",
+    Min = 0,
+    Max = 100,
+    Default = 0,
+    Rounding = 1,
+    Callback = function(v)
+        AntiAim_Speed = v
+    end
+})
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -512,212 +921,203 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
--- ================== UI ==================
-local AimbotToggle = AimbotSection:Toggle({
-    Name = "Enable Aimbot",
+-- ===================== AIMBOT =====================
+local Aim = Tabs.Combat:AddLeftGroupbox('Aim Bot')
+
+Aim:AddToggle("EnableAimbot", {
+    Text = "Enable Aimbot",
     Default = false,
-    Flag = "EnableAimbot",
-    Callback = function(state)
-        aimbotEnabled = state
+    Callback = function(v)
+        aimbotEnabled = v
     end
 })
 
-local TeamCheck = AimbotSection:Toggle({
-    Name = "Team Check",
+Aim:AddToggle("TeamCheck", {
+    Text = "Team Check",
     Default = false,
-    Flag = "TeamCheck",
-    Callback = function(state)
-        teamCheck = state
+    Callback = function(v)
+        teamCheck = v
     end
 })
 
-local PredictionToggle = AimbotSection:Toggle({
-    Name = "Prediction",
+Aim:AddToggle("PredictionToggle", {
+    Text = "Prediction",
     Default = false,
-    Flag = "Prediction",
-    Callback = function(state)
-        predictionEnabled = state
+    Callback = function(v)
+        predictionEnabled = v
     end
 })
 
-local PredictionStrength = AimbotSection:Slider({
-    Name = "Prediction Strength",
-    Min = 0.1,
-    Max = 3,
+Aim:AddSlider("PredictionStrength", {
+    Text = "Prediction Strength",
+    Min = 0.1, Max = 3,
+    Rounding = 1,
     Default = 1,
-    Decimals = 1,
     Callback = function(v)
         predictionStrength = v
     end
 })
 
-local PredictionSmooth = AimbotSection:Slider({
-    Name = "Prediction Smoothness",
-    Min = 0,
-    Max = 10,
+Aim:AddSlider("PredictionStrength", {
+    Text = "Prediction Smoothness",
+    Min = 0, Max = 10,
+    Rounding = 1,
     Default = 5,
     Callback = function(v)
         predictionSmoothness = v
     end
 })
 
-local SensitivitySlider = AimbotSection:Slider({
-    Name = "Sensitivity",
-    Min = 0.1,
-    Max = 2,
+Aim:AddSlider("AimbotSensitivity", {
+    Text = "Sensitivity",
+    Min = 0.1, Max = 2,
+    Rounding = 1,
     Default = 0.5,
-    Decimals = 1,
-    Callback = function(val)
-        smoothingFactor = val
+    Callback = function(v)
+        smoothingFactor = v
     end
 })
 
-local TargetTypeDropdown = AimbotSection:Dropdown({
-    Name = "Target Type",
-    items = {"Closest To Mouse", "Closest To Player"},
+Aim:AddDropdown("TargetType", {
+    Text = "Target Type",
+    Values = {"Closest To Mouse", "Closest To Player"},
     Default = "Closest To Mouse",
-    Flag = "TargetType",
-    Callback = function(selected)
-        TargetType = selected
+    Callback = function(v)
+        TargetType = v
     end
 })
 
--- 🎯 Target Hitbox
-local TargetHitboxDropdown = AimbotSection:Dropdown({
-    Name = "Target Hitbox",
-    items = {"Head", "HumanoidRootPart"},
+Aim:AddDropdown("TargetHitbox", {
+    Text = "Target Hitbox",
+    Values = {"Head", "HumanoidRootPart"},
     Default = "Head",
-    Flag = "TargetHitbox",
-    Callback = function(selected)
-        TargetHitbox = selected
+    Callback = function(v)
+        TargetHitbox = v
     end
 })
 
-local AimbotSection = CombatTab:Section({ Name = "Fov", Side = 2})
+local Fov = Tabs.Combat:AddRightGroupbox('Aim Bot')
 
--- ============== FOV SETTINGS ==============
-local FovToggle = AimbotSection:Toggle({
-    Name = "Enable FOV",
+Fov:AddToggle("EnableFOV", {
+    Text = "Enable FOV",
     Default = false,
-    Flag = "EnableFOV",
-    Callback = function(state)
-        FovEnabled = state
+    Callback = function(v)
+        FovEnabled = v
     end
 })
 
-local UseFovToggle = AimbotSection:Toggle({
-    Name = "Use Field of View",
+Fov:AddToggle("UseFOV", {
+    Text = "Use Field Of View",
     Default = true,
-    Flag = "UseFOV",
-    Callback = function(state)
-        FovUse = state
+    Callback = function(v)
+        FovUse = v
+    end
+}):AddColorPicker("FOVColor", {
+    Default = Color3.fromRGB(0,255,0),
+    Transparency = 0,
+    Callback = function(color)
+        FovColor = color
     end
 })
 
-UseFovToggle:Colorpicker({
-    Default = Color3.fromRGB(0, 255, 0),
-    Flag = "FOVColor",
-    Callback = function(c)
-        FovColor = c
-    end
-})
-
-local FovOutlineToggle = AimbotSection:Toggle({
-    Name = "Circle Outline",
+Fov:AddToggle("CircleOutline", {
+    Text = "Circle Outline",
     Default = true,
-    Flag = "CircleOutline",
-    Callback = function(state)
-        FovOutline = state
+    Callback = function(v)
+        FovOutline = v
     end
 })
 
-local FovFillToggle = AimbotSection:Toggle({
-    Name = "Fill Circle",
+Fov:AddToggle("FillCircle", {
+    Text = "Fill Circle",
     Default = false,
-    Flag = "FOVFill",
-    Callback = function(state)
-        FovFill = state
+    Callback = function(v)
+        FovFill = v
     end
 })
 
-local FovDynamicToggle = AimbotSection:Toggle({
-    Name = "Dynamic Circle",
+Fov:AddToggle("DynamicFOV", {
+    Text = "Dynamic Circle",
     Default = false,
-    Flag = "FOVDynamic",
-    Callback = function(state)
-        FovDynamic = state
+    Callback = function(v)
+        FovDynamic = v
     end
 })
 
-local FovRadiusSlider = AimbotSection:Slider({
-    Name = "Field of View",
-    Min = 50,
-    Max = 400,
+Fov:AddSlider("Field Of Viewв", {
+    Text = "Field Of View",
+    Min = 50, Max = 400,
+    Rounding = 1,
     Default = 150,
     Callback = function(v)
         FOVRadius = v
     end
 })
 
-local FovShapeSlider = AimbotSection:Slider({
-    Name = "Circle Shape",
-    Min = 1,
-    Max = 100,
+Fov:AddSlider("FOVShape", {
+    Text = "Circle Shape",
+    Min = 1, Max = 100,
+    Rounding = 1,
     Default = 100,
     Callback = function(v)
         FovShape = v
     end
 })
 
-local FovThicknessSlider = AimbotSection:Slider({
-    Name = "Circle Thickness",
-    Min = 1,
-    Max = 5,
+Fov:AddSlider("FOVThickness", {
+    Text = "Circle Thickness",
+    Min = 1, Max = 5,
+    Rounding = 1,
     Default = 2,
     Callback = function(v)
         FovThickness = v
     end
 })
 
-local GunMods = CombatTab:Section({ Name = "Gun Mods",     Side = 1})
+local Gun = Tabs.Combat:AddLeftGroupbox('Gun Mods')
 
 local recoilValue = 0
 local recoilEnabled = false
+local fireRateEnabled = false
+local fireRateValue = 1
 
--- 🔫 Перемикач No Recoil
-local RecoilControlToggle = GunMods:Toggle({
-    Name = "Recoil Control",
+local RepStorage = game:GetService("ReplicatedStorage")
+local WeaponsFolder = RepStorage:WaitForChild("Weapons")
+
+-- ===========================================
+-- 🟦 RECOIL CONTROL — ТОГЛ + СЛАЙДЕР
+-- ===========================================
+
+Gun:AddToggle('recoil_toggle', {
+    Text = 'Recoil Control',
     Default = false,
-    Flag = "EnableRecoilControl",
+    Tooltip = 'Вимикає віддачу та розкид',
     Callback = function(state)
         recoilEnabled = state
-        local replicationstorage = game.ReplicatedStorage
 
-        for i, v in pairs(replicationstorage.Weapons:GetDescendants()) do
+        for _, v in pairs(WeaponsFolder:GetDescendants()) do
             if v.Name == "RecoilControl" or v.Name == "MaxSpread" then
                 if state then
                     v.Value = recoilValue
                 else
-                    v.Value = 100 -- стандартне значення коли викл.
+                    v.Value = 100
                 end
             end
         end
     end
 })
 
--- 🎚️ Слайдер сили recoil
-local RecoilSlider = GunMods:Slider({
-    name = "Recoil Value",
-    flag = "RecoilValue",
-    min = 0,
-    max = 10,
-    value = 0,
-    float = 1,
-    callback = function(value)
+Gun:AddSlider('recoil_slider', {
+    Text = 'Recoil Value',
+    Default = 0,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+
+    Callback = function(value)
         recoilValue = value
         if recoilEnabled then
-            local replicationstorage = game.ReplicatedStorage
-            for i, v in pairs(replicationstorage.Weapons:GetDescendants()) do
+            for _, v in pairs(WeaponsFolder:GetDescendants()) do
                 if v.Name == "RecoilControl" or v.Name == "MaxSpread" then
                     v.Value = recoilValue
                 end
@@ -726,24 +1126,24 @@ local RecoilSlider = GunMods:Slider({
     end
 })
 
-local fireRateEnabled = false
-local fireRateValue = 1 -- 1–100
+-- ===========================================
+-- 🔥 FIRE RATE — ТОГЛ + СЛАЙДЕР
+-- ===========================================
 
--- 🔫 Перемикач швидкості стрільби
-local FFSpeedToggle = GunMods:Toggle({
-    Name = "Fire Rate",
+Gun:AddToggle('firerate_toggle', {
+    Text = 'Fire Rate Modifier',
     Default = false,
-    Flag = "EnableFFSpeed",
+    Tooltip = 'Збільшує швидкість стрільби',
     Callback = function(state)
         fireRateEnabled = state
-        local replicationstorage = game.ReplicatedStorage
 
-        for i, v in pairs(replicationstorage.Weapons:GetDescendants()) do
+        for _, v in pairs(WeaponsFolder:GetDescendants()) do
+
             if v.Name == "Auto" then
                 v.Value = state
             end
+
             if v.Name == "FireRate" then
-                -- Конвертуємо значення слайдера 1–100 → 0.1–0.01
                 local rate = 0.1 - ((fireRateValue - 1) * 0.0009)
                 v.Value = state and rate or 0.1
             end
@@ -751,19 +1151,18 @@ local FFSpeedToggle = GunMods:Toggle({
     end
 })
 
--- 🎚️ Слайдер (1 = нормальний, 100 = дуже швидко)
-local FireRateSlider = GunMods:Slider({
-    name = "Fire Rate Power",
-    flag = "FireRatePower",
-    min = 1,
-    max = 100,
+Gun:AddSlider('firerate_slider', {
+    Text = 'Fire Rate Power',
     Default = 1,
-    Decimal = 1,
-    callback = function(value)
+    Min = 1,
+    Max = 100,
+    Rounding = 1,
+
+    Callback = function(value)
         fireRateValue = value
+
         if fireRateEnabled then
-            local replicationstorage = game.ReplicatedStorage
-            for i, v in pairs(replicationstorage.Weapons:GetDescendants()) do
+            for _, v in pairs(WeaponsFolder:GetDescendants()) do
                 if v.Name == "FireRate" then
                     local rate = 0.1 - ((value - 1) * 0.0009)
                     v.Value = rate
@@ -773,73 +1172,659 @@ local FireRateSlider = GunMods:Slider({
     end
 })
 
-local HumanSection = VisualsTab:Section({Name = "Humans", Side = 1 })
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+
+    -- 🧩 Змінні
+    local ExpansionSize = Vector3.new(3, 3, 3)
+    local Transparency = 0.5
+    local OriginalSizes = {}
+    local HeadExpandEnabled = false
+    local Connections = {}
+
+    -- 🔹 Розширює голову
+    local function expandHead(char)
+        if char.Parent == LocalPlayer then return end
+        local head = char:FindFirstChild("Head")
+        if head and head:IsA("BasePart") then
+            if not OriginalSizes[head] then
+                OriginalSizes[head] = head.Size
+            end
+            head.Size = ExpansionSize
+            head.Transparency = Transparency
+            head.Material = Enum.Material.Neon
+        end
+    end
+
+    -- 🔹 Для нового гравця
+    local function onPlayer(plr)
+        if plr == LocalPlayer then return end
+        if plr.Character then expandHead(plr.Character) end
+        plr.CharacterAdded:Connect(function(char)
+            char:WaitForChild("Head")
+            expandHead(char)
+        end)
+    end
+
+    -- 🔹 Увімкнення
+    local function enableExpander()
+        for _, plr in ipairs(Players:GetPlayers()) do
+            onPlayer(plr)
+        end
+        Connections["PlayerAdded"] = Players.PlayerAdded:Connect(onPlayer)
+    end
+
+    -- 🔹 Вимкнення
+    local function disableExpander()
+        if Connections["PlayerAdded"] then
+            Connections["PlayerAdded"]:Disconnect()
+            Connections["PlayerAdded"] = nil
+        end
+        for head, size in pairs(OriginalSizes) do
+            if head and head.Parent then
+                head.Size = size
+                head.Transparency = 0
+                head.Material = Enum.Material.Plastic
+            end
+        end
+    end
+    --------------------------------------------------------------------
+    -- 🧠 FLUENT RENEWED UI (HEAD EXPANDER)
+    --------------------------------------------------------------------
+local HeadExpander = Tabs.Combat:AddRightGroupbox('Head Expander')
+
+    -- 🟢 Toggle
+    HeadExpander:AddToggle('HeadExpand_Toggle', {
+        Text = 'Enable Head Expander',
+        Default = false,
+        Callback = function(Value)
+            HeadExpandEnabled = Value
+            if Value then
+                enableExpander()
+            else
+                disableExpander()
+            end
+        end
+    })
+
+    -- 🎚️ Slider: Head Size
+    HeadExpander:AddSlider('HeadSize_Slider', {
+        Text = 'Head Size',
+        Min = 2,
+        Max = 6,
+        Default = 3,
+        Rounding = 1,
+        Callback = function(v)
+            ExpansionSize = Vector3.new(v, v, v)
+            if HeadExpandEnabled then
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
+                        expandHead(plr.Character)
+                    end
+                end
+            end
+        end
+    })
+
+    -- 🎚️ Slider: Transparency
+    HeadExpander:AddSlider('HeadTransparency_Slider', {
+        Text = 'Head Transparency',
+        Min = 0,
+        Max = 1,
+        Default = 0.5,
+        Rounding = 1,
+        Callback = function(v)
+            Transparency = v
+            if HeadExpandEnabled then
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
+                        expandHead(plr.Character)
+                    end
+                end
+            end
+        end
+    })
 
 
-local Settings = {
-    Enabled = false,
-    Names = false,
-    Name_Color = Color3.fromRGB(255,255,255),
-    Boxes = false,
-    Box_Type = "Corner",
-    Box_Color = Color3.fromRGB(255,255,255),
-    Healthbar = false,
-    Health_High = Color3.fromRGB(0,255,0),
-    Health_Low = Color3.fromRGB(255,0,0),
-    Distance = false,
-    Distance_Color = Color3.fromRGB(255,255,255),
-    Weapon = false,
-    Weapon_Color = Color3.fromRGB(255,255,255),
-    Max_Distance = 1000,
+    --------------------------------------------------------------------
+    -- 🛡️ Маскування розміру (античит)
+    --------------------------------------------------------------------
+    local mt = getrawmetatable(game)
+    setreadonly(mt, false)
+
+    local oldIndex = mt.__index
+    local oldNamecall = mt.__namecall
+
+    mt.__index = newcclosure(function(self, key)
+        if key == "Size" and OriginalSizes[self] then
+            return OriginalSizes[self]
+        end
+        return oldIndex(self, key)
+    end)
+
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        local args = {...}
+
+        if method == "Size" and OriginalSizes[self] then
+            return OriginalSizes[self]
+        end
+
+        return oldNamecall(self, unpack(args))
+    end)
+
+    setreadonly(mt, true)
+end)
+
+local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Player Esp')
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- 🧠 FLAGS & SETTINGS
+local flags = {}
+local settings = {
+    maxHPVisibility = 100,
+    boxType = "Boxes",       -- Boxes / Corners
+    boxRender = "Dynamic",   -- Dynamic / Static
+    metric = "Meters",       -- Meters / Studs
+    useDisplayName = true
 }
 
--- // FIX: prevent nil call error
-local function update_elements() end
-
--- // UI SECTION FORMATTED ---------------------------------------------------
-
-local EnabledToggle = HumanSection:Toggle({
-    Name = "Enabled",
+-- 🔰 ESP ГОЛОВНІ ПЕРЕМИКАЧІ
+LeftGroupBox:AddToggle('enable esp', {
+    Text = 'Enable ESP',
     Default = false,
-    Flag = "Enabled",
     Callback = function(Value)
-        Settings.Enabled = Value
-        update_elements()
+        flags["enable esp"] = Value
     end
 })
 
-
-local BoxesToggle = HumanSection:Toggle({
-    Name = "Boxes",
+LeftGroupBox:AddToggle('box', {
+    Text = 'Box',
     Default = false,
-    Flag = "Boxes",
     Callback = function(Value)
-        Settings.Boxes = Value
-        update_elements()
+        flags["box"] = Value
+    end
+})
+:AddColorPicker('color box', {
+    Default = Color3.new(1, 1, 1),
+    Title = 'Box Color',
+    Callback = function(Value)
+        flags["color box"] = Value
     end
 })
 
-BoxesToggle:Colorpicker({
-    Name = "Box Color",
-    Flag = "Box_Color",
-    Callback = function(Color)
-        Settings.Box_Color = Color
-        update_elements()
-    end
-})
-
-local HealthbarToggle = HumanSection:Toggle({
-    Name = "Healthbar",
+-- ❤️ Health Bar
+LeftGroupBox:AddToggle('box bar', {
+    Text = 'Health Bar',
     Default = false,
-    Flag = "Healthbar",
     Callback = function(Value)
-        Settings.Healthbar = Value
-        update_elements()
+        flags["box bar"] = Value
+    end
+})
+:AddColorPicker('color hp full', {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = 'Full Health Color',
+    Callback = function(Value)
+        flags["color hp full"] = Value
+    end
+})
+:AddColorPicker('color hp low', {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = 'Low Health Color',
+    Callback = function(Value)
+        flags["color hp low"] = Value
     end
 })
 
-local CoreGui = game:GetService("CoreGui")
+LeftGroupBox:AddToggle('box number hear', {
+    Text = 'Health Number',
+    Default = false,
+    Callback = function(Value)
+        flags["box number hear"] = Value
+    end
+})
+
+-- 🧍‍♂️ Name
+-- 🧍‍♂️ Name (з власним кольором)
+LeftGroupBox:AddToggle('box name', {
+    Text = 'Show Name',
+    Default = false,
+    Callback = function(Value)
+        flags["box name"] = Value
+    end
+})
+:AddColorPicker('color name', {
+    Default = Color3.new(1, 1, 1),
+    Title = 'Name Color',
+    Callback = function(Value)
+        flags["color name"] = Value
+    end
+})
+
+-- 📏 Distance
+LeftGroupBox:AddToggle('box discr', {
+    Text = 'Distance',
+    Default = false,
+    Callback = function(Value)
+        flags["box discr"] = Value
+    end
+})
+:AddColorPicker('distance', {
+    Default = Color3.new(1, 1, 1),
+    Title = 'Distance Color',
+    Callback = function(Value)
+        flags["distance"] = Value
+    end
+})
+
+-- 🔫 Equipped Item
+LeftGroupBox:AddToggle('box item', {
+    Text = 'Equipped Item',
+    Default = false,
+    Callback = function(Value)
+        flags["box item"] = Value
+    end
+})
+:AddColorPicker('color item', {
+    Default = Color3.new(1, 1, 1),
+    Title = 'Item Color',
+    Callback = function(Value)
+        flags["color item"] = Value
+    end
+})
+
+-- 📍 Tracer
+LeftGroupBox:AddToggle('tbox', {
+    Text = 'Tracer',
+    Default = false,
+    Callback = function(Value)
+        flags["tbox"] = Value
+    end
+})
+:AddColorPicker('color tracer', {
+    Default = Color3.new(1, 1, 1),
+    Title = 'Tracer Color',
+    Callback = function(Value)
+        flags["color tracer"] = Value
+    end
+})
+
+-- 🎚️ Distance Check Slider
+LeftGroupBox:AddSlider('dis chek', {
+    Text = "Distance Check",
+    Min = 1000,
+    Max = 10000,
+    Default = 5000,
+    Rounding = 1,
+    Callback = function(Value)
+        flags["dis chek"] = Value
+    end
+})
+
+local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Esp Settings')
+
+LeftGroupBox:AddSlider('max hp visibility', {
+    Text = "Max HP Visibility",
+    Min = 0,
+    Max = 100,
+    Default = 100,
+    Rounding = 1,
+    Callback = function(Value)
+        settings.maxHPVisibility = Value
+    end
+})
+
+LeftGroupBox:AddDropdown('box render', {
+    Text = "Box Render",
+    Values = {"Dynamic", "Static"},
+    Default = "Dynamic",
+    Callback = function(Value)
+        settings.boxRender = Value
+    end
+})
+
+LeftGroupBox:AddDropdown('metric', {
+    Text = "Metric",
+    Values = {"Meters", "Studs"},
+    Default = "Meters",
+    Callback = function(Value)
+        settings.metric = Value
+    end
+})
+
+LeftGroupBox:AddDropdown('box type', {
+    Text = "Box Type",
+    Values = {"Boxes", "Corners"},
+    Default = "Boxes",
+    Callback = function(Value)
+        settings.boxType = Value
+    end
+})
+
+LeftGroupBox:AddToggle('use display name', {
+    Text = 'Use Display Name',
+    Default = true,
+    Callback = function(Value)
+        settings.useDisplayName = Value
+    end
+})
+
+-- === CREATE ESP OBJECT ===
+local function CreateESP()
+    local esp = {}
+
+    esp.BoxOutline = Drawing.new("Square")
+    esp.BoxOutline.Visible = false
+    esp.BoxOutline.Color = Color3.new(0,0,0)
+    esp.BoxOutline.Thickness = 2
+
+    esp.Box = Drawing.new("Square")
+    esp.Box.Visible = false
+    esp.Box.Color = Color3.new(1,1,1)
+    esp.Box.Thickness = 1
+
+    esp.CornerLines = {}
+    for i = 1, 8 do
+        local line = Drawing.new("Line")
+        line.Visible = false
+        table.insert(esp.CornerLines, line)
+    end
+
+    esp.HealthBarOutline = Drawing.new("Square")
+    esp.HealthBarOutline.Visible = false
+    esp.HealthBarOutline.Color = Color3.new(0,0,0)
+    esp.HealthBarOutline.Thickness = 4
+
+    esp.HealthBar = Drawing.new("Square")
+    esp.HealthBar.Visible = false
+    esp.HealthBar.Thickness = 2
+
+    esp.NameText = Drawing.new("Text")
+    esp.NameText.Visible = false
+    esp.NameText.Outline = true
+    esp.NameText.Center = true
+    esp.NameText.Size = 15
+    esp.NameText.Font = 0 
+
+    esp.DistanceText = Drawing.new("Text")
+    esp.DistanceText.Visible = false
+    esp.DistanceText.Outline = true
+    esp.DistanceText.Center = true
+    esp.DistanceText.Size = 14
+    esp.DistanceText.Font = 0
+
+    esp.HealthPercentText = Drawing.new("Text")
+    esp.HealthPercentText.Visible = false
+    esp.HealthPercentText.Outline = true
+    esp.HealthPercentText.Center = true
+    esp.HealthPercentText.Size = 14
+    esp.HealthPercentText.Font = 0
+
+    esp.TracerLine = Drawing.new("Line")
+    esp.TracerLine.Visible = false
+    esp.TracerLine.Thickness = 1
+
+    esp.ItemText = Drawing.new("Text")
+    esp.ItemText.Visible = false
+    esp.ItemText.Outline = true
+    esp.ItemText.Center = true
+    esp.ItemText.Size = 14
+    esp.ItemText.Font = 0
+
+    return esp
+end
+
+-- === ESP HANDLERS ===
+local ESPTable = {}
+
+local function RemoveESP(player)
+    if ESPTable[player] then
+        for _, v in pairs(ESPTable[player]) do
+            if typeof(v) == "table" then
+                for _, line in ipairs(v) do pcall(line.Remove, line) end
+            else
+                pcall(v.Remove, v)
+            end
+        end
+        ESPTable[player] = nil
+    end
+end
+
+local function AddESP(player)
+    if player ~= LocalPlayer and not ESPTable[player] then
+        ESPTable[player] = CreateESP()
+    end
+end
+
+for _, p in ipairs(Players:GetPlayers()) do AddESP(p) end
+Players.PlayerAdded:Connect(AddESP)
+Players.PlayerRemoving:Connect(RemoveESP)
+
+-- === MAIN RENDER LOOP ===
+RunService.RenderStepped:Connect(function()
+    if not flags["enable esp"] then
+        for _, esp in pairs(ESPTable) do
+            for _, v in pairs(esp) do
+                if typeof(v) == "table" then
+                    for _, l in ipairs(v) do l.Visible = false end
+                else
+                    v.Visible = false
+                end
+            end
+        end
+        return
+    end
+
+    local camPos = Camera.CFrame.Position
+    local maxDistance = flags["dis chek"] or 10000
+    local viewSize = Camera.ViewportSize
+    local screenCenter = Vector2.new(viewSize.X/2, viewSize.Y)
+
+    for player, esp in pairs(ESPTable) do
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+        if hrp and hum and hum.Health > 0 then
+            local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            local distance = (camPos - hrp.Position).Magnitude
+
+            if not onScreen or distance > maxDistance then
+                for _, v in pairs(esp) do
+                    if typeof(v) == "table" then
+                        for _, l in ipairs(v) do l.Visible = false end
+                    else
+                        v.Visible = false
+                    end
+                end
+                continue
+            end
+
+            local boxWidth, boxHeight = 40, 60
+            if settings.boxRender == "Dynamic" then
+                local scale = math.clamp(100 / distance, 0, 300)
+                boxWidth, boxHeight = 40*scale, 60*scale
+            end
+
+            local xPos, yPos = pos.X - boxWidth/2, pos.Y - boxHeight/2
+
+            local boxEnabled    = flags["box"]
+            local barEnabled    = flags["box bar"]
+            local nameEnabled   = flags["box name"]
+            local discrEnabled  = flags["box discr"]
+            local numberEnabled = flags["box number hear"]
+            local itemEnabled   = flags["box item"]
+
+            local boxColor      = flags["color box"] or Color3.new(1,1,1)
+            local tracerColor   = flags["color tracer"] or Color3.new(1,1,1)
+            local discrColor    = flags["distance"] or Color3.new(1,1,1)
+            local itemColor     = flags["color item"] or Color3.new(1,1,1)
+
+            -- Box Type handling
+            if boxEnabled then
+                if settings.boxType == "Boxes" then
+                    -- Main Box
+                    esp.Box.Size = Vector2.new(boxWidth, boxHeight)
+                    esp.Box.Position = Vector2.new(xPos, yPos)
+                    esp.Box.Color = boxColor
+                    esp.Box.Visible = true
+
+                    esp.BoxOutline.Size = esp.Box.Size
+                    esp.BoxOutline.Position = esp.Box.Position
+                    esp.BoxOutline.Visible = true
+
+                    -- Hide corner lines
+                    for _, l in ipairs(esp.CornerLines) do l.Visible = false end
+                elseif settings.boxType == "Corners" then
+                    -- Hide main box
+                    esp.Box.Visible, esp.BoxOutline.Visible = false, false
+
+                    -- Draw corner lines
+                    local cornerLen = boxWidth*0.25
+                    local lines = esp.CornerLines
+                    local cx, cy, w, h = xPos, yPos, boxWidth, boxHeight
+                    local corners = {
+                        {cx, cy, cx+cornerLen, cy},
+                        {cx, cy, cx, cy+cornerLen},
+                        {cx+w, cy, cx+w-cornerLen, cy},
+                        {cx+w, cy, cx+w, cy+cornerLen},
+                        {cx, cy+h, cx+cornerLen, cy+h},
+                        {cx, cy+h, cx, cy+h-cornerLen},
+                        {cx+w, cy+h, cx+w-cornerLen, cy+h},
+                        {cx+w, cy+h, cx+w, cy+h-cornerLen}
+                    }
+                    for i, c in ipairs(corners) do
+                        local line = lines[i]
+                        line.From = Vector2.new(c[1], c[2])
+                        line.To = Vector2.new(c[3], c[4])
+                        line.Color = boxColor
+                        line.Visible = true
+                    end
+                end
+            else
+                esp.Box.Visible, esp.BoxOutline.Visible = false, false
+                for _, l in ipairs(esp.CornerLines) do l.Visible = false end
+            end
+
+            -- Tracer
+            if flags["tbox"] then
+                esp.TracerLine.From = screenCenter
+                esp.TracerLine.To = Vector2.new(pos.X,pos.Y)
+                esp.TracerLine.Color = tracerColor
+                esp.TracerLine.Visible = true
+            else
+                esp.TracerLine.Visible = false
+            end
+
+            -- Health bar + number
+            local healthPercent
+-- === PERFECT HP BAR FOR YOUR BOX SYSTEM ===
+if barEnabled then
+    local hp = hum.Health
+    local maxhp = hum.MaxHealth
+    local perc = math.clamp(hp / maxhp, 0, 1)
+
+    local lowColor  = flags["color hp low"]  or Color3.fromRGB(255,0,0)
+    local fullColor = flags["color hp full"] or Color3.fromRGB(0,255,0)
+    local hpColor = lowColor:Lerp(fullColor, perc)
+
+    -- позиція HP BAR рівно по лівій стороні твого боксу
+    local barX = xPos - 5
+    local barY = yPos
+
+    -- outline
+    esp.HealthBarOutline.Size = Vector2.new(3, boxHeight)
+    esp.HealthBarOutline.Position = Vector2.new(barX - 1, barY - 1)
+    esp.HealthBarOutline.Color = Color3.new(0,0,0)
+    esp.HealthBarOutline.Thickness = 1
+    esp.HealthBarOutline.Filled = false
+    esp.HealthBarOutline.Visible = true
+
+    -- fill
+    local fillHeight = math.floor(boxHeight * perc)
+
+    esp.HealthBar.Size = Vector2.new(1, fillHeight)
+    esp.HealthBar.Position = Vector2.new(barX, barY + (boxHeight - fillHeight))
+    esp.HealthBar.Color = hpColor
+    esp.HealthBar.Filled = true
+    esp.HealthBar.Visible = true
+
+    -- % текст
+    if numberEnabled then
+        esp.HealthPercentText.Text = tostring(math.floor(perc * 100)) .. "%"
+        esp.HealthPercentText.Color = hpColor
+        esp.HealthPercentText.Position = Vector2.new(barX - 18, barY + (boxHeight - fillHeight) - 5)
+        esp.HealthPercentText.Visible = true
+    else
+        esp.HealthPercentText.Visible = false
+    end
+
+else
+    esp.HealthBar.Visible = false
+    esp.HealthBarOutline.Visible = false
+    esp.HealthPercentText.Visible = false
+end
+
+-- Name
+local nameColor = flags["color name"] or Color3.new(1, 1, 1)
+
+if flags["box name"] then
+    esp.NameText.Text = settings.useDisplayName and player.DisplayName or player.Name
+    esp.NameText.Position = Vector2.new(pos.X, yPos - 20)
+    esp.NameText.Color = nameColor
+    esp.NameText.Visible = true
+else
+    esp.NameText.Visible = false
+end
+
+            -- Distance
+            if flags["box discr"] then
+                local distText = settings.metric == "Meters" and string.format("%.0fm",distance) or string.format("%.0fs",distance)
+                esp.DistanceText.Text = distText
+                esp.DistanceText.Position = Vector2.new(pos.X, yPos+boxHeight+5)
+                esp.DistanceText.Color = discrColor
+                esp.DistanceText.Visible = true
+            else
+                esp.DistanceText.Visible = false
+            end
+
+            -- Equipped Item
+            if flags["box item"] then
+                local itemName = "Hands"
+                if char:FindFirstChild("Equipped") then
+                    local item = char.Equipped:FindFirstChildOfClass("Model")
+                    if item then itemName = item.Name end
+                end
+                esp.ItemText.Text = "["..itemName.."]"
+                esp.ItemText.Position = Vector2.new(pos.X, yPos+boxHeight+20)
+                esp.ItemText.Color = itemColor
+                esp.ItemText.Visible = true
+            else
+                esp.ItemText.Visible = false
+            end
+
+        else
+            for _, v in pairs(esp) do
+                if typeof(v) == "table" then
+                    for _, l in ipairs(v) do l.Visible = false end
+                else
+                    v.Visible = false
+                end
+            end
+        end
+    end
+end)
+
+local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Player Chams')
+
 local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+
 local lp = Players.LocalPlayer
 local connections = {}
 
@@ -847,527 +1832,411 @@ local Storage = Instance.new("Folder")
 Storage.Name = "Highlight_Storage"
 Storage.Parent = CoreGui
 
-local FillColor = Color3.fromRGB(175, 25, 255)
+local FillColor = Color3.fromRGB(255, 255, 255)
 local OutlineColor = Color3.fromRGB(255, 255, 255)
 local FillTransparencySlider = 10
 local OutlineTransparencySlider = 10
 local ChamsEnabled = false
 
+-- 🔹 Переводимо значення слайдерів у прозорість (0–1)
 local function ToTransparency(val)
-    return math.clamp(val / 20, 0, 1)
+	return math.clamp(val / 20, 0, 1)
 end
 
+-- 🔹 Оновлення Highlight
 local function UpdateHighlight(h)
-    h.FillColor = FillColor
-    h.OutlineColor = OutlineColor
-    h.FillTransparency = ToTransparency(FillTransparencySlider)
-    h.OutlineTransparency = ToTransparency(OutlineTransparencySlider)
+	h.FillColor = FillColor
+	h.OutlineColor = OutlineColor
+	h.FillTransparency = ToTransparency(FillTransparencySlider)
+	h.OutlineTransparency = ToTransparency(OutlineTransparencySlider)
 end
 
+-- 🔹 Додаємо Highlight гравцю
 local function Highlight(plr)
-    if plr == lp then return end
+	if plr == lp then return end
+	if Storage:FindFirstChild(plr.Name) then
+		Storage[plr.Name]:Destroy()
+	end
 
-    if Storage:FindFirstChild(plr.Name) then
-        Storage[plr.Name]:Destroy()
-    end
+	local h = Instance.new("Highlight")
+	h.Name = plr.Name
+	h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	h.Enabled = ChamsEnabled
+	h.Parent = Storage
 
-    local h = Instance.new("Highlight")
-    h.Name = plr.Name
-    h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    h.Enabled = ChamsEnabled
-    h.Parent = Storage
+	local function ApplyToCharacter(char)
+		h.Adornee = char
+		UpdateHighlight(h)
+	end
 
-    local function ApplyToCharacter(char)
-        h.Adornee = char
-        UpdateHighlight(h)
-    end
+	if plr.Character then
+		ApplyToCharacter(plr.Character)
+	end
 
-    if plr.Character then
-        ApplyToCharacter(plr.Character)
-    end
-
-    connections[plr] = plr.CharacterAdded:Connect(ApplyToCharacter)
+	connections[plr] = plr.CharacterAdded:Connect(ApplyToCharacter)
 end
 
+-- 🔹 Обробка гравців
 Players.PlayerAdded:Connect(Highlight)
 for _, plr in ipairs(Players:GetPlayers()) do
-    Highlight(plr)
+	Highlight(plr)
 end
 
 Players.PlayerRemoving:Connect(function(plr)
-    if Storage:FindFirstChild(plr.Name) then
-        Storage[plr.Name]:Destroy()
-    end
-    if connections[plr] then
-        connections[plr]:Disconnect()
-        connections[plr] = nil
-    end
+	if Storage:FindFirstChild(plr.Name) then
+		Storage[plr.Name]:Destroy()
+	end
+	if connections[plr] then
+		connections[plr]:Disconnect()
+		connections[plr] = nil
+	end
 end)
 
-local NamesToggle = HumanSection:Toggle({
-    Name = "Names",
-    Default = false,
-    Flag = "Names",
-    Callback = function(Value)
-        Settings.Names = Value
-        update_elements()
-    end
+-- 🟣 Нові UI елементи
+LeftGroupBox:AddToggle('ChamsToggle', {
+	Text = 'Player Chams',
+	Default = false,
+	Callback = function(Value)
+		ChamsEnabled = Value
+		for _, h in ipairs(Storage:GetChildren()) do
+			h.Enabled = ChamsEnabled
+		end
+	end
 })
-NamesToggle:Colorpicker({
-    Name = "Name Color",
-    Flag = "Name_Color",
-    Callback = function(Color)
-        Settings.Name_Color = Color
-        update_elements()
-    end
+:AddColorPicker('ChamsFillColor', {
+	Default = FillColor,
+	Title = 'Fill Color',
+	Callback = function(Value)
+		FillColor = Value
+		for _, h in ipairs(Storage:GetChildren()) do
+			h.FillColor = FillColor
+		end
+	end
 })
-
-local DistanceToggle = HumanSection:Toggle({
-    Name = "Distance",
-    Default = false,
-    Flag = "Distance",
-    Callback = function(Value)
-        Settings.Distance = Value
-        update_elements()
-    end
-})
-DistanceToggle:Colorpicker({
-    Name = "Distance Color",
-    Flag = "Distance_Color",
-    Callback = function(Color)
-        Settings.Distance_Color = Color
-        update_elements()
-    end
+:AddColorPicker('ChamsOutlineColor', {
+	Default = OutlineColor,
+	Title = 'Outline Color',
+	Callback = function(Value)
+		OutlineColor = Value
+		for _, h in ipairs(Storage:GetChildren()) do
+			h.OutlineColor = OutlineColor
+		end
+	end
 })
 
-local MaxDistanceSlider = HumanSection:Slider({
-    Name = "Max Distance",
-    Flag = "Max_Distance",
-    Min = 0,
-    Max = 10000,
-    Suffix = "(m)",
-    Default = 1000,
-    Decimal = 1,
-    Callback = function(Value)
-        Settings.Max_Distance = Value
-        update_elements()
-    end
+LeftGroupBox:AddSlider('FillTransparencySlider', {
+	Text = 'Fill Transparency',
+	Min = 0,
+	Max = 20,
+	Default = FillTransparencySlider,
+	Rounding = 1,
+	Callback = function(Value)
+		FillTransparencySlider = Value
+		for _, h in ipairs(Storage:GetChildren()) do
+			h.FillTransparency = ToTransparency(Value)
+		end
+	end
 })
 
-local HumanSection = VisualsTab:Section({Name = "Player Chams", Side = 1 })
-
-local Chams = HumanSection:Toggle({
-    Name = "Chams",
-    Flag = "chams_toggle",
-    Default = false,
-    Callback = function(state)
-        ChamsEnabled = state
-        for _, h in ipairs(Storage:GetChildren()) do
-            h.Enabled = ChamsEnabled
-        end
-    end
+LeftGroupBox:AddSlider('OutlineTransparencySlider', {
+	Text = 'Outline Transparency',
+	Min = 0,
+	Max = 20,
+	Default = OutlineTransparencySlider,
+	Rounding = 1,
+	Callback = function(Value)
+		OutlineTransparencySlider = Value
+		for _, h in ipairs(Storage:GetChildren()) do
+			h.OutlineTransparency = ToTransparency(Value)
+		end
+	end
 })
 
-Chams:Colorpicker({
-    Name = "Chams Fill Color",
-    Flag = "chams_fill_color",
-    Default = FillColor,
-    Callback = function(color)
-        FillColor = color
-        for _, h in ipairs(Storage:GetChildren()) do
-            h.FillColor = FillColor
-        end
-    end
-})
+local RightGroupBox = Tabs.Visuals:AddRightGroupbox('Lighting')
 
-Chams:Colorpicker({
-    Name = "Chams Outline Color",
-    Flag = "chams_outline_color",
-    Default = OutlineColor,
-    Callback = function(color)
-        OutlineColor = color
-        for _, h in ipairs(Storage:GetChildren()) do
-            h.OutlineColor = OutlineColor
-        end
-    end
-})
-
-HumanSection:Slider({
-    Name = "Fill Transparency",
-    Flag = "fill_transparency",
-    Min = 0,
-    Max = 20,
-    Suffix = "(Transparency)",
-    Default = FillTransparencySlider,
-    Decimals = 1,
-    Callback = function(val)
-        FillTransparencySlider = val
-        for _, h in ipairs(Storage:GetChildren()) do
-            h.FillTransparency = ToTransparency(val)
-        end
-    end
-})
-
-HumanSection:Slider({
-    Name = "Outline Transparency",
-    Flag = "outline_transparency",
-    Min = 0,
-    Max = 20,
-    Suffix = "(Transparency)",
-    Default = OutlineTransparencySlider,
-    Decimals = 1,
-    Callback = function(val)
-        OutlineTransparencySlider = val
-        for _, h in ipairs(Storage:GetChildren()) do
-            h.OutlineTransparency = ToTransparency(val)
-        end
-    end
-})
-
-local VisualsSection = VisualsTab:Section({Name = "Lighting", Side = 2 })
 local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
 
+-- 🟣 NO FOG
 local noFogConnection
-
-local Toggle = VisualsSection:Toggle({
-    name = "No Fog",
-    Default = false,
-    flag = "NoFog",
-    state = false,
-    callback = function(state)
-        if state then
-            if noFogConnection then
-                noFogConnection:Disconnect()
-                noFogConnection = nil
-            end
-
-            noFogConnection = RunService.RenderStepped:Connect(function()
-                Lighting.FogStart = 1e6
-                Lighting.FogEnd = 1e6
-
-                local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
-                if atmosphere then
-                    atmosphere.Density = 0
-                    atmosphere.Haze = 0
-                    atmosphere.Glare = 0
-                    atmosphere.Offset = 0
-                end
-            end)
-        else
-            if noFogConnection then
-                noFogConnection:Disconnect()
-                noFogConnection = nil
-            end
-            Lighting.FogStart = 0
-            Lighting.FogEnd = 1000
-        end
-    end
+RightGroupBox:AddToggle('NoFog_Toggle', {
+	Text = 'No Fog',
+	Default = false,
+	Callback = function(Value)
+		if Value then
+			if noFogConnection then
+				noFogConnection:Disconnect()
+				noFogConnection = nil
+			end
+			noFogConnection = RunService.RenderStepped:Connect(function()
+				Lighting.FogStart = 1e6
+				Lighting.FogEnd = 1e6
+				local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
+				if atmosphere then
+					atmosphere.Density = 0
+					atmosphere.Haze = 0
+					atmosphere.Glare = 0
+					atmosphere.Offset = 0
+				end
+			end)
+		else
+			if noFogConnection then
+				noFogConnection:Disconnect()
+				noFogConnection = nil
+			end
+			Lighting.FogStart = 0
+			Lighting.FogEnd = 1000
+		end
+	end
 })
 
-local Lighting = game:GetService("Lighting")
-
-local Toggle = VisualsSection:Toggle({
-    name = "No Shadows",
-    Default = false,
-    flag = "NoShadows",
-    Risky = false,
-    callback = function(state)
-        Lighting.GlobalShadows = not state
-    end
+-- 🌑 NO SHADOWS
+RightGroupBox:AddToggle('NoShadows_Toggle', {
+	Text = 'No Shadows',
+	Default = false,
+	Callback = function(Value)
+		Lighting.GlobalShadows = not Value
+	end
 })
 
-local Lighting = game:GetService("Lighting")
-
+-- 🌅 CUSTOM AMBIENT
 local AmbientEnabled = false
-local AmbientColor = Color3.fromRGB(198, 92, 92)
+local AmbientColor = Color3.fromRGB(255, 255, 255)
 
 local function UpdateAmbient()
-    if AmbientEnabled then
-        RunService:BindToRenderStep("CustomAmbient", 1, function()
-            Lighting.Ambient = AmbientColor
-        end)
-    else
-        RunService:UnbindFromRenderStep("CustomAmbient")
-        Lighting.Ambient = Color3.new(1,1,1)
-    end
+	if AmbientEnabled then
+		RunService:BindToRenderStep("CustomAmbient", 1, function()
+			Lighting.Ambient = AmbientColor
+		end)
+	else
+		RunService:UnbindFromRenderStep("CustomAmbient")
+		Lighting.Ambient = Color3.new(1, 1, 1)
+	end
 end
 
-local Toggle = VisualsSection:Toggle({
-    name = "Custom World Ambient",
-    Default = false,
-    flag = "ambient",
-    callback = function(state)
-        AmbientEnabled = state
-        UpdateAmbient()
-    end
+RightGroupBox:AddToggle('CustomAmbient_Toggle', {
+	Text = 'Custom World Ambient',
+	Default = false,
+	Callback = function(Value)
+		AmbientEnabled = Value
+		UpdateAmbient()
+	end
 })
-Toggle:Colorpicker({
-    name = "Ambient Color",
-
-    flag = "ambient color",
-    color = AmbientColor,
-    callback = function(color)
-        AmbientColor = color
-        if AmbientEnabled then
-            Lighting.Ambient = AmbientColor
-        end
-    end
+:AddColorPicker('AmbientColor', {
+	Default = AmbientColor,
+	Title = 'Ambient Color',
+	Callback = function(Value)
+		AmbientColor = Value
+		if AmbientEnabled then
+			Lighting.Ambient = AmbientColor
+		end
+	end
 })
 
-local Lighting = game:GetService("Lighting")
-
+-- ⚙️ CUSTOM TECHNOLOGY
 local TechnologyEnabled = false
 local SelectedTechnology = "Voxel"
 
-local Toggle = VisualsSection:Toggle({
-    name = "Custom Technology",
-    Default = false,
-    flag = "Visuals/TechnologyEnabled",
-    state = false,
-    callback = function(state)
-        TechnologyEnabled = state
-        if state then
-            pcall(function()
-                Lighting.Technology = Enum.Technology[SelectedTechnology]
-            end)
-        else
-            pcall(function()
-                Lighting.Technology = Enum.Technology.Future
-            end)
-        end
-    end
+RightGroupBox:AddToggle('Technology_Toggle', {
+	Text = 'Custom Technology',
+	Default = false,
+	Callback = function(Value)
+		TechnologyEnabled = Value
+		if Value then
+			pcall(function()
+				Lighting.Technology = Enum.Technology[SelectedTechnology]
+			end)
+		else
+			pcall(function()
+				Lighting.Technology = Enum.Technology.Future
+			end)
+		end
+	end
 })
 
-local MultiDropdown = VisualsSection:Dropdown({
-    name = "Technology Mode",
-    flag = "Visuals/Technology",
-    Default = "Voxel",
-    items = {"Voxel", "ShadowMap", "Legacy", "Compatibility", "Future"},
-    callback = function(val)
-        SelectedTechnology = val
-        if TechnologyEnabled then
-            pcall(function()
-                Lighting.Technology = Enum.Technology[val]
-            end)
-        end
-    end
+RightGroupBox:AddDropdown('Technology_Mode', {
+	Text = 'Technology Mode',
+	Default = 'Voxel',
+	Values = {'Voxel', 'ShadowMap', 'Legacy', 'Compatibility', 'Future'},
+	Callback = function(Value)
+		SelectedTechnology = Value
+		if TechnologyEnabled then
+			pcall(function()
+				Lighting.Technology = Enum.Technology[Value]
+			end)
+		end
+	end
 })
 
-local Lighting = game:GetService("Lighting")
-
-
+-- 🌇 CUSTOM TIME
 local timeConnection
 local customTime = 12
 
-local Toggle = VisualsSection:Toggle({
-    name = "Custom Time",
-    Default = false,
-    flag = "CustomTime",
-    state = false,
-    callback = function(state)
-        if state then
-            if timeConnection then
-                timeConnection:Disconnect()
-                timeConnection = nil
-            end
-            timeConnection = Lighting:GetPropertyChangedSignal("ClockTime"):Connect(function()
-                Lighting.ClockTime = customTime
-            end)
-        else
-            if timeConnection then
-                timeConnection:Disconnect()
-                timeConnection = nil
-            end
-        end
-    end
+RightGroupBox:AddToggle('CustomTime_Toggle', {
+	Text = 'Custom Time',
+	Default = false,
+	Callback = function(Value)
+		if Value then
+			if timeConnection then
+				timeConnection:Disconnect()
+				timeConnection = nil
+			end
+			timeConnection = Lighting:GetPropertyChangedSignal("ClockTime"):Connect(function()
+				Lighting.ClockTime = customTime
+			end)
+		else
+			if timeConnection then
+				timeConnection:Disconnect()
+				timeConnection = nil
+			end
+		end
+	end
 })
 
-local Slider = VisualsSection:Slider({
-    name = "Custom Time",
-    flag = "CustomTimeValue",
-    value = 12,
-    min = 0,
-    max = 24,
-    decimals = 1,
-    callback = function(val)
-        customTime = val
-    end
+RightGroupBox:AddSlider('CustomTime_Slider', {
+	Text = 'Custom Time',
+	Min = 0,
+	Max = 24,
+	Default = customTime,
+	Rounding = 1,
+	Callback = function(Value)
+		customTime = Value
+	end
 })
 
-local Lighting = game:GetService("Lighting")
+local CustomSkyBox = Tabs.Visuals:AddRightGroupbox('Custom Sky Box')
 
-local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
-if not cc then
-    cc = Instance.new("ColorCorrectionEffect")
-    cc.Parent = Lighting
-end
-
-local customSaturation = 1
-local satEnabled = false
-
-local Toggle = VisualsSection:Toggle({
-    name = "Custom Saturation",
-    Default = false,
-    flag = "CustomSaturation",
-    state = false,
-    callback = function(state)
-        satEnabled = state
-        if satEnabled then
-            cc.Saturation = customSaturation
-            cc.Enabled = true
-        else
-            cc.Enabled = false
-        end
-    end
-})
-
-local Slider = VisualsSection:Slider({
-    name = "Saturation",
-    flag = "SaturationValue",
-    value = 1,
-    min = 0,
-    max = 3,
-    decimals = 0.1,
-    callback = function(val)
-        customSaturation = val
-        if satEnabled then
-            cc.Saturation = customSaturation
-        end
-    end
-})
-
-local VisualsSection = VisualsTab:Section({Name = "Custom Sky Box", Side = 2 })
 local Lighting = game:GetService("Lighting")
 flags = flags or {}
 
 local function ClearSkybox()
-    for _, child in pairs(Lighting:GetChildren()) do
-        if child:IsA("Sky") then
-            child:Destroy()
-        end
-    end
+	for _, child in pairs(Lighting:GetChildren()) do
+		if child:IsA("Sky") then
+			child:Destroy()
+		end
+	end
 end
 
 local function SetSkybox(name)
-    ClearSkybox()
+	ClearSkybox()
 
-    local sky = Instance.new("Sky")
-    sky.Name = name
+	local sky = Instance.new("Sky")
+	sky.Name = name
 
-    if name == "Galaxy" then
-        sky.SkyboxBk = "http://www.roblox.com/asset/?id=149397692"
-        sky.SkyboxDn = "http://www.roblox.com/asset/?id=149397686"
-        sky.SkyboxFt = "http://www.roblox.com/asset/?id=149397697"
-        sky.SkyboxLf = "http://www.roblox.com/asset/?id=149397684"
-        sky.SkyboxRt = "http://www.roblox.com/asset/?id=149397688"
-        sky.SkyboxUp = "http://www.roblox.com/asset/?id=149397702"
-    elseif name == "Galaxy 2" then
-        sky.SkyboxBk = "http://www.roblox.com/asset/?id=155441936"
-        sky.SkyboxDn = "http://www.roblox.com/asset/?id=155441802"
-        sky.SkyboxFt = "http://www.roblox.com/asset/?id=155441818"
-        sky.SkyboxLf = "http://www.roblox.com/asset/?id=155441777"
-        sky.SkyboxRt = "http://www.roblox.com/asset/?id=155441874"
-        sky.SkyboxUp = "http://www.roblox.com/asset/?id=155441905"
-    elseif name == "Galaxy 3" then
-        sky.SkyboxBk = "rbxassetid://135908594667929"
-        sky.SkyboxDn = "rbxassetid://139584143501514"
-        sky.SkyboxFt = "rbxassetid://92947876187368"
-        sky.SkyboxLf = "rbxassetid://72493016739936"
-        sky.SkyboxRt = "rbxassetid://81731245279712"
-        sky.SkyboxUp = "rbxassetid://88174897344210"
-    elseif name == "Saturne" then
-        sky.SkyboxBk = "rbxassetid://1898724755"
-        sky.SkyboxDn = "rbxassetid://1898727189"
-        sky.SkyboxFt = "rbxassetid://1898722814"
-        sky.SkyboxLf = "rbxassetid://1898729298"
-        sky.SkyboxRt = "rbxassetid://1898741025"
-        sky.SkyboxUp = "rbxassetid://1898736761"
-    elseif name == "Neptune" then
-        sky.SkyboxBk = "rbxassetid://218955819"
-        sky.SkyboxDn = "rbxassetid://218953419"
-        sky.SkyboxFt = "rbxassetid://218954524"
-        sky.SkyboxLf = "rbxassetid://218958493"
-        sky.SkyboxRt = "rbxassetid://218957134"
-        sky.SkyboxUp = "rbxassetid://218950090"
-    elseif name == "Redshift" then
-        sky.SkyboxBk = "rbxassetid://401664839"
-        sky.SkyboxDn = "rbxassetid://401664862"
-        sky.SkyboxFt = "rbxassetid://401664960"
-        sky.SkyboxLf = "rbxassetid://401664881"
-        sky.SkyboxRt = "rbxassetid://401664901"
-        sky.SkyboxUp = "rbxassetid://401664936"
-    elseif name == "Pink Daylights" then
-        sky.SkyboxBk = "rbxassetid://11555017034"
-        sky.SkyboxDn = "rbxassetid://11555013415"
-        sky.SkyboxFt = "rbxassetid://11555010145"
-        sky.SkyboxLf = "rbxassetid://11555006545"
-        sky.SkyboxRt = "rbxassetid://11555000712"
-        sky.SkyboxUp = "rbxassetid://11554996247"
-    elseif name == "Purple Night" then
-        sky.SkyboxBk = "rbxassetid://17279854976"
-        sky.SkyboxDn = "rbxassetid://17279856318"
-        sky.SkyboxFt = "rbxassetid://17279858447"
-        sky.SkyboxLf = "rbxassetid://17279860360"
-        sky.SkyboxRt = "rbxassetid://17279862234"
-        sky.SkyboxUp = "rbxassetid://17279864507"
-    elseif name == "Gray Night" then
-        sky.SkyboxBk = "rbxassetid://1618912481"
-        sky.SkyboxDn = "rbxassetid://1618913943"
-        sky.SkyboxFt = "rbxassetid://1618913244"
-        sky.SkyboxLf = "rbxassetid://1618912849"
-        sky.SkyboxRt = "rbxassetid://1618911568"
-        sky.SkyboxUp = "rbxassetid://1618913654"
-    elseif name == "Anime Sky" then
-        sky.SkyboxBk = "rbxassetid://18351376859"
-        sky.SkyboxDn = "rbxassetid://18351374919"
-        sky.SkyboxFt = "rbxassetid://18351376800"
-        sky.SkyboxLf = "rbxassetid://18351376469"
-        sky.SkyboxRt = "rbxassetid://18351376457"
-        sky.SkyboxUp = "rbxassetid://18351377189"
-    else
-        warn("" .. tostring(name))
-        return
-    end
+	if name == "Galaxy" then
+		sky.SkyboxBk = "http://www.roblox.com/asset/?id=149397692"
+		sky.SkyboxDn = "http://www.roblox.com/asset/?id=149397686"
+		sky.SkyboxFt = "http://www.roblox.com/asset/?id=149397697"
+		sky.SkyboxLf = "http://www.roblox.com/asset/?id=149397684"
+		sky.SkyboxRt = "http://www.roblox.com/asset/?id=149397688"
+		sky.SkyboxUp = "http://www.roblox.com/asset/?id=149397702"
+	elseif name == "Galaxy 2" then
+		sky.SkyboxBk = "http://www.roblox.com/asset/?id=155441936"
+		sky.SkyboxDn = "http://www.roblox.com/asset/?id=155441802"
+		sky.SkyboxFt = "http://www.roblox.com/asset/?id=155441818"
+		sky.SkyboxLf = "http://www.roblox.com/asset/?id=155441777"
+		sky.SkyboxRt = "http://www.roblox.com/asset/?id=155441874"
+		sky.SkyboxUp = "http://www.roblox.com/asset/?id=155441905"
+	elseif name == "Galaxy 3" then
+		sky.SkyboxBk = "rbxassetid://135908594667929"
+		sky.SkyboxDn = "rbxassetid://139584143501514"
+		sky.SkyboxFt = "rbxassetid://92947876187368"
+		sky.SkyboxLf = "rbxassetid://72493016739936"
+		sky.SkyboxRt = "rbxassetid://81731245279712"
+		sky.SkyboxUp = "rbxassetid://88174897344210"
+	elseif name == "Saturne" then
+		sky.SkyboxBk = "rbxassetid://1898724755"
+		sky.SkyboxDn = "rbxassetid://1898727189"
+		sky.SkyboxFt = "rbxassetid://1898722814"
+		sky.SkyboxLf = "rbxassetid://1898729298"
+		sky.SkyboxRt = "rbxassetid://1898741025"
+		sky.SkyboxUp = "rbxassetid://1898736761"
+	elseif name == "Neptune" then
+		sky.SkyboxBk = "rbxassetid://218955819"
+		sky.SkyboxDn = "rbxassetid://218953419"
+		sky.SkyboxFt = "rbxassetid://218954524"
+		sky.SkyboxLf = "rbxassetid://218958493"
+		sky.SkyboxRt = "rbxassetid://218957134"
+		sky.SkyboxUp = "rbxassetid://218950090"
+	elseif name == "Redshift" then
+		sky.SkyboxBk = "rbxassetid://401664839"
+		sky.SkyboxDn = "rbxassetid://401664862"
+		sky.SkyboxFt = "rbxassetid://401664960"
+		sky.SkyboxLf = "rbxassetid://401664881"
+		sky.SkyboxRt = "rbxassetid://401664901"
+		sky.SkyboxUp = "rbxassetid://401664936"
+	elseif name == "Pink Daylights" then
+		sky.SkyboxBk = "rbxassetid://11555017034"
+		sky.SkyboxDn = "rbxassetid://11555013415"
+		sky.SkyboxFt = "rbxassetid://11555010145"
+		sky.SkyboxLf = "rbxassetid://11555006545"
+		sky.SkyboxRt = "rbxassetid://11555000712"
+		sky.SkyboxUp = "rbxassetid://11554996247"
+	elseif name == "Purple Night" then
+		sky.SkyboxBk = "rbxassetid://17279854976"
+		sky.SkyboxDn = "rbxassetid://17279856318"
+		sky.SkyboxFt = "rbxassetid://17279858447"
+		sky.SkyboxLf = "rbxassetid://17279860360"
+		sky.SkyboxRt = "rbxassetid://17279862234"
+		sky.SkyboxUp = "rbxassetid://17279864507"
+	elseif name == "Gray Night" then
+		sky.SkyboxBk = "rbxassetid://1618912481"
+		sky.SkyboxDn = "rbxassetid://1618913943"
+		sky.SkyboxFt = "rbxassetid://1618913244"
+		sky.SkyboxLf = "rbxassetid://1618912849"
+		sky.SkyboxRt = "rbxassetid://1618911568"
+		sky.SkyboxUp = "rbxassetid://1618913654"
+	elseif name == "Anime Sky" then
+		sky.SkyboxBk = "rbxassetid://18351376859"
+		sky.SkyboxDn = "rbxassetid://18351374919"
+		sky.SkyboxFt = "rbxassetid://18351376800"
+		sky.SkyboxLf = "rbxassetid://18351376469"
+		sky.SkyboxRt = "rbxassetid://18351376457"
+		sky.SkyboxUp = "rbxassetid://18351377189"
+	else
+		warn("Unknown skybox:", tostring(name))
+		return
+	end
 
-    sky.Parent = Lighting
+	sky.Parent = Lighting
 end
 
 flags.CustomSkyEnabled = false
 flags.SelectedSky = "Galaxy"
 
-local Toggle = VisualsSection:Toggle({
-    name = "Custom Sky",
-    Default = false,
-    flag = "CustomSky",
-    state = false,
-    callback = function(state)
-        flags.CustomSkyEnabled = state
-        if flags.CustomSkyEnabled then
-            SetSkybox(flags.SelectedSky)
-        else
-            ClearSkybox()
-        end
-    end
+CustomSkyBox:AddToggle('CustomSky_Toggle', {
+	Text = 'Custom Sky',
+	Default = false,
+	Callback = function(Value)
+		flags.CustomSkyEnabled = Value
+		if flags.CustomSkyEnabled then
+			SetSkybox(flags.SelectedSky)
+		else
+			ClearSkybox()
+		end
+	end
 })
 
-local MultiDropdown = VisualsSection:Dropdown({
-    name = "Skybox Selector",
-    flag = "SkyboxChoice",
-    value = "Galaxy",
-    items = {
-        "Galaxy", "Galaxy 2", "Galaxy 3", "Saturne", "Neptune",
-        "Redshift", "Pink Daylights", "Purple Night", "Gray Night", "Anime Sky"
-    },
-    callback = function(selected)
-        flags.SelectedSky = selected
-        if flags.CustomSkyEnabled then
-            SetSkybox(flags.SelectedSky)
-        end
-    end
+CustomSkyBox:AddDropdown('SkyboxSelector', {
+	Text = 'Skybox Selector',
+	Default = 'Galaxy',
+	Values = {
+		'Galaxy', 'Galaxy 2', 'Galaxy 3',
+		'Saturne', 'Neptune', 'Redshift',
+		'Pink Daylights', 'Purple Night',
+		'Gray Night', 'Anime Sky'
+	},
+	Callback = function(Value)
+		flags.SelectedSky = Value
+		if flags.CustomSkyEnabled then
+			SetSkybox(flags.SelectedSky)
+		end
+	end
 })
 
-local Chams = VisualsTab:Section({ Name = "Local Player", Side = 1})
+local LocalPlayer = Tabs.Visuals:AddRightGroupbox('Local Player')
+
+local RunService = game:GetService("RunService")
 
 local ArmChams_Enabled = false
 local WeaponChams_Enabled = false
@@ -1376,603 +2245,319 @@ local WeaponMaterial = "Plastic"
 local ArmChams_Color = Color3.fromRGB(50, 50, 50)
 local WeaponChams_Color = Color3.fromRGB(50, 50, 50)
 
--- 🔹 Функція для конвертації кольору у VertexColor
+-- 🔹 Колір → VertexColor
 local function ColorToVertex(color)
     return Vector3.new(color.R, color.G, color.B)
 end
 
--- 🦾 Arm Chams Toggle
-local ArmChamsToggle = Chams:Toggle({
-    Name = "Arm Chams",
+-- ===============================================
+-- 🟦 ARM CHAMS UI (FLUENT RENEWED)
+-- ===============================================
+
+LocalPlayer:AddToggle("ArmChamsToggle", {
+    Text = "Arm Chams",
     Default = false,
-    Flag = "Arm_Chams",
     Tooltip = "Enable Arm Chams",
-    Callback = function(Value)
-        ArmChams_Enabled = Value
+    Callback = function(v)
+        ArmChams_Enabled = v
+    end
+})
+:AddColorPicker("ArmChamsColorPicker", {
+    Default = ArmChams_Color,
+    Title = "Arm Color",
+    Transparency = 0,
+    Callback = function(c)
+        ArmChams_Color = c
     end
 })
 
--- 🎨 Arm Material Dropdown
-Chams:Dropdown({
-    Name = "Arm Material",
-    Flag = "Arm_Material",
-    Items = {"Plastic", "ForceField", "Wood", "Grass"},
-    Default = "Plastic",
-    Callback = function(Value)
-        ArmMaterial = Value
+LocalPlayer:AddDropdown("ArmMaterialDropdown", {
+    Text = "Arm Material",
+    Default = ArmMaterial,
+    Values = {"Plastic", "ForceField", "Wood", "Grass"},
+    Callback = function(v)
+        ArmMaterial = v
     end
 })
 
--- 🌈 Arm Color
-ArmChamsToggle:Colorpicker({
-    Name = "Arm Color",
-    Flag = "Arm_Color",
-    Default = Color3.fromRGB(50, 50, 50),
-    Callback = function(Value)
-        ArmChams_Color = Value
-    end
-})
+-- ===============================================
+-- 🔫 WEAPON CHAMS UI (FLUENT RENEWED)
+-- ===============================================
 
--- 🔫 Weapon Chams Toggle
-local WeaponChamsToggle = Chams:Toggle({
-    Name = "Weapon Chams",
+LocalPlayer:AddToggle("WeaponChamsToggle", {
+    Text = "Weapon Chams",
     Default = false,
-    Flag = "Weapon_Chams",
     Tooltip = "Enable Weapon Chams",
-    Callback = function(Value)
-        WeaponChams_Enabled = Value
+    Callback = function(v)
+        WeaponChams_Enabled = v
+    end
+})
+:AddColorPicker("WeaponChamsColorPicker", {
+    Default = WeaponChams_Color,
+    Title = "Weapon Color",
+    Transparency = 0,
+    Callback = function(c)
+        WeaponChams_Color = c
     end
 })
 
--- 🔩 Weapon Material Dropdown
-Chams:Dropdown({
-    Name = "Weapon Material",
-    Flag = "Weapon_Material",
-    Items = {"Plastic", "ForceField", "Wood", "Grass"},
-    Default = "Plastic",
-    Callback = function(Value)
-        WeaponMaterial = Value
+LocalPlayer:AddDropdown("WeaponMaterialDropdown", {
+    Text = "Weapon Material",
+    Default = WeaponMaterial,
+    Values = {"Plastic", "ForceField", "Wood", "Grass"},
+    Callback = function(v)
+        WeaponMaterial = v
     end
 })
 
--- 🌈 Weapon Color
-WeaponChamsToggle:Colorpicker({
-    Name = "Weapon Color",
-    Flag = "Weapon_Color",
-    Default = Color3.fromRGB(50, 50, 50),
-    Callback = function(Value)
-        WeaponChams_Color = Value
-    end
-})
+-- ===============================================
+-- 🔥 ОСНОВНА ФУНКЦІЯ CHAMS
+-- ===============================================
 
--- 🧠 Основна функція застосування
-local function ApplyChams()
+local function ApplyFluentChams()
     local armsFolder = workspace.CurrentCamera:FindFirstChild("Arms")
     if not armsFolder then return end
 
     for _, v in pairs(armsFolder:GetDescendants()) do
         if v:IsA("BasePart") or v:IsA("MeshPart") then
+
             local isArm = (v.Name == "Left Arm" or v.Name == "Right Arm")
             local isWeapon = not isArm
 
-            -- 🦾 Arm Chams
+            -- 🦾 ARM CHAMS
             if ArmChams_Enabled and isArm then
                 v.Material = Enum.Material[ArmMaterial]
                 v.Color = ArmChams_Color
 
-                if v:FindFirstChildOfClass("SpecialMesh") then
-                    v:FindFirstChildOfClass("SpecialMesh").VertexColor = ColorToVertex(ArmChams_Color)
+                local mesh = v:FindFirstChildOfClass("SpecialMesh")
+                if mesh then
+                    mesh.VertexColor = ColorToVertex(ArmChams_Color)
                 end
             end
 
-            -- 🔫 Weapon Chams
+            -- 🔫 WEAPON CHAMS
             if WeaponChams_Enabled and isWeapon then
                 v.Material = Enum.Material[WeaponMaterial]
                 v.Color = WeaponChams_Color
 
-                if v:FindFirstChildOfClass("SpecialMesh") then
-                    v:FindFirstChildOfClass("SpecialMesh").VertexColor = ColorToVertex(WeaponChams_Color)
+                local mesh = v:FindFirstChildOfClass("SpecialMesh")
+                if mesh then
+                    mesh.VertexColor = ColorToVertex(WeaponChams_Color)
                 end
             end
         end
     end
 end
 
--- 🔁 Постійне оновлення
-game:GetService("RunService").Heartbeat:Connect(ApplyChams)
+-- 🔁 ПОСТІЙНЕ ОНОВЛЕННЯ
+RunService.Heartbeat:Connect(ApplyFluentChams)
 
--- // ESP DRAWING LOGIC ---------------------------------------------------
+local CustomCrosshair = Tabs.Visuals:AddRightGroupbox('Custom Crosshair')
 
-local Drawing = Drawing
+-- 🧠 Сервіси
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local lp = Players.LocalPlayer
 
-local cornerDrawings = {}
-local outlineDrawings = {}
+-- ⚙️ Змінні
+local crosshairEnabled = false
+local spinningEnabled = false
+local outlineEnabled = false
+local rotationSpeed = 120
+local color = Color3.fromRGB(255, 255, 255)
+local size = 12
+local thickness = 2
+local orientation = 0
 
-local function createBoxESP(player)
-    if cornerDrawings[player] or outlineDrawings[player] then return end
+-- 🪟 GUI створення
+local gui = Instance.new("ScreenGui")
+gui.Name = "RotatingCrosshair"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = lp:WaitForChild("PlayerGui")
 
-    local corners, outlines = {}, {}
-    for i = 1, 8 do
-        local c = Drawing.new("Line")
-        c.Thickness, c.ZIndex, c.Visible = 1, 2, false
-        table.insert(corners, c)
+-- Центральна група для автопозиціювання
+local group = Instance.new("Frame")
+group.AnchorPoint = Vector2.new(0.5, 0.5)
+group.Position = UDim2.new(0.5, 0, 0.5, 0)
+group.Size = UDim2.new(0, 0, 0, 0)
+group.BackgroundTransparency = 1
+group.BorderSizePixel = 0
+group.Parent = gui
 
-        local o = Drawing.new("Line")
-        o.Thickness, o.ZIndex, o.Visible = 3, 1, false
-        table.insert(outlines, o)
-    end
+-- Центр
+local center = Instance.new("Frame")
+center.AnchorPoint = Vector2.new(0.5, 0.5)
+center.Size = UDim2.new(0, thickness, 0, thickness)
+center.BackgroundColor3 = color
+center.BorderSizePixel = 0
+center.Visible = false
+center.Parent = group
 
-    cornerDrawings[player] = corners
-    outlineDrawings[player] = outlines
+-- Горизонтальна лінія
+local horiz = Instance.new("Frame")
+horiz.AnchorPoint = Vector2.new(0.5, 0.5)
+horiz.Size = UDim2.new(0, size, 0, thickness)
+horiz.BackgroundColor3 = color
+horiz.BorderSizePixel = 0
+horiz.Visible = false
+horiz.Parent = group
 
-    RunService.RenderStepped:Connect(function()
-        if not Settings.Enabled or not Settings.Boxes then
-            for i = 1, 8 do
-                corners[i].Visible = false
-                outlines[i].Visible = false
-            end
-            return
-        end
+-- Вертикальна лінія
+local vert = Instance.new("Frame")
+vert.AnchorPoint = Vector2.new(0.5, 0.5)
+vert.Size = UDim2.new(0, thickness, 0, size)
+vert.BackgroundColor3 = color
+vert.BorderSizePixel = 0
+vert.Visible = false
+vert.Parent = group
 
-        local char = player.Character
-        if not char then
-            for i = 1, 8 do
-                corners[i].Visible = false
-                outlines[i].Visible = false
-            end
-            return
-        end
+-- Outline (чорна обводка)
+local outline = Instance.new("UIStroke")
+outline.Thickness = 1
+outline.Color = Color3.new(0, 0, 0)
+outline.Enabled = false
+outline.Parent = horiz
 
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        local hum = char:FindFirstChild("Humanoid")
-        if hrp and hum then
-            local camera = workspace.CurrentCamera
-            local charPos = hrp.Position
-            local cameraPos = camera.CFrame.Position
-            local distance = (cameraPos - charPos).Magnitude
-            local pos, onScreen = camera:WorldToViewportPoint(charPos)
+local outline2 = outline:Clone()
+outline2.Parent = vert
 
-            if hum.Health > 0 and onScreen and distance <= Settings.Max_Distance then
-                local scale = 1 / (pos.Z * math.tan(math.rad(camera.FieldOfView / 2)) * 2) * 100
-                local w, h = 40 * scale, 60 * scale
-                local x, y = pos.X - w / 2, pos.Y - h / 2
-                local lw, lh = w * 0.3, h * 0.3
-
-                if Settings.Box_Type == "Corner" then
-                    corners[1].From = Vector2.new(x, y)
-                    corners[1].To = Vector2.new(x + lw, y)
-                    corners[2].From = Vector2.new(x, y)
-                    corners[2].To = Vector2.new(x, y + lh)
-
-                    corners[3].From = Vector2.new(x + w, y)
-                    corners[3].To = Vector2.new(x + w - lw, y)
-                    corners[4].From = Vector2.new(x + w, y)
-                    corners[4].To = Vector2.new(x + w, y + lh)
-
-                    corners[5].From = Vector2.new(x, y + h)
-                    corners[5].To = Vector2.new(x + lw, y + h)
-                    corners[6].From = Vector2.new(x, y + h)
-                    corners[6].To = Vector2.new(x, y + h - lh)
-
-                    corners[7].From = Vector2.new(x + w, y + h)
-                    corners[7].To = Vector2.new(x + w - lw, y + h)
-                    corners[8].From = Vector2.new(x + w, y + h)
-                    corners[8].To = Vector2.new(x + w, y + h - lh)
-                else
-                    corners[1].From = Vector2.new(x, y)
-                    corners[1].To = Vector2.new(x + w, y)
-                    corners[2].From = Vector2.new(x + w, y)
-                    corners[2].To = Vector2.new(x + w, y + h)
-                    corners[3].From = Vector2.new(x + w, y + h)
-                    corners[3].To = Vector2.new(x, y + h)
-                    corners[4].From = Vector2.new(x, y + h)
-                    corners[4].To = Vector2.new(x, y)
-                end
-
-                for i = 1, 8 do
-                    corners[i].Color = Settings.Box_Color
-                    corners[i].Visible = true
-                    outlines[i].From = corners[i].From
-                    outlines[i].To = corners[i].To
-                    outlines[i].Color = Color3.new(0, 0, 0)
-                    outlines[i].Visible = true
-                end
-            else
-                for i = 1, 8 do
-                    corners[i].Visible = false
-                    outlines[i].Visible = false
-                end
-            end
-        else
-            for i = 1, 8 do
-                corners[i].Visible = false
-                outlines[i].Visible = false
-            end
-        end
-    end)
+-- 🔄 Оновлення вигляду
+local function UpdateCrosshair()
+	horiz.BackgroundColor3 = color
+	vert.BackgroundColor3 = color
+	center.BackgroundColor3 = color
+	horiz.Size = UDim2.new(0, size, 0, thickness)
+	vert.Size = UDim2.new(0, thickness, 0, size)
+	horiz.Visible = crosshairEnabled
+	vert.Visible = crosshairEnabled
+	center.Visible = crosshairEnabled
+	outline.Enabled = outlineEnabled
+	outline2.Enabled = outlineEnabled
 end
 
-local function CreateHealthESP(player)
-    local outline = Drawing.new("Square")
-    outline.Thickness = 1
-    outline.Color = Color3.new(0, 0, 0)
-    outline.Filled = false
-    outline.Visible = false
-
-    local bar = Drawing.new("Square")
-    bar.Filled = true
-    bar.Color = Settings.Health_High
-    bar.Visible = false
-
-    RunService.RenderStepped:Connect(function()
-        if not Settings.Enabled or not Settings.Healthbar then
-            bar.Visible = false
-            outline.Visible = false
-            return
-        end
-
-        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-            bar.Visible = false
-            outline.Visible = false
-            return
-        end
-
-        local hum = player.Character:FindFirstChild("Humanoid")
-        if not hum then
-            bar.Visible = false
-            outline.Visible = false
-            return
-        end
-
-        local camera = workspace.CurrentCamera
-        local pos, vis = camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-        local distance = (camera.CFrame.Position - player.Character.HumanoidRootPart.Position).Magnitude
-
-        if vis and hum.Health > 0 and distance <= Settings.Max_Distance then
-            local scale = 1 / (pos.Z * math.tan(math.rad(camera.FieldOfView / 2)) * 2) * 100
-            local h = math.floor(60 * scale)
-            local x, y = math.floor(pos.X - 20 * scale - 8), math.floor(pos.Y - h / 2)
-
-            outline.Size = Vector2.new(4, h)
-            outline.Position = Vector2.new(x - 1, y - 1)
-            outline.Visible = true
-
-            local hpPerc = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
-            local barFill = math.floor(h * hpPerc)
-
-            bar.Color = Settings.Health_Low:Lerp(Settings.Health_High, hpPerc)
-
-            bar.Size = Vector2.new(2, barFill)
-            bar.Position = Vector2.new(x, y + h - barFill)
-            bar.Visible = true
-        else
-            bar.Visible = false
-            outline.Visible = false
-        end
-    end)
-end
-
-local function CreateNameESP(player)
-    local name = Drawing.new("Text")
-    name.Center = true
-    name.Outline = true
-    name.Visible = false
-    name.Font = 2
-    name.Size = 13
-    name.Color = Settings.Name_Color
-
-    RunService.RenderStepped:Connect(function()
-        if not Settings.Enabled or not Settings.Names then
-            name.Visible = false
-            return
-        end
-
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = player.Character.HumanoidRootPart
-            local camera = workspace.CurrentCamera
-            local pos, visible = camera:WorldToViewportPoint(hrp.Position)
-            local distance = (camera.CFrame.Position - hrp.Position).Magnitude
-
-            if visible and distance <= Settings.Max_Distance then
-                local scale = 1 / (pos.Z * math.tan(math.rad(camera.FieldOfView / 2)) * 2) * 100
-                local h = 60 * scale
-                name.Text = player.Name
-                name.Position = Vector2.new(pos.X, pos.Y - h / 2 - 15)
-                name.Color = Settings.Name_Color
-                name.Visible = true
-            else
-                name.Visible = false
-            end
-        else
-            name.Visible = false
-        end
-    end)
-end
-
-local function CreateDistanceESP(player)
-    local dist = Drawing.new("Text")
-    dist.Center = true
-    dist.Outline = true
-    dist.Visible = false
-    dist.Font = 2
-    dist.Size = 13
-    dist.Color = Settings.Distance_Color
-
-    RunService.RenderStepped:Connect(function()
-        if not Settings.Enabled or not Settings.Distance then
-            dist.Visible = false
-            return
-        end
-
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = player.Character.HumanoidRootPart
-            local camera = workspace.CurrentCamera
-            local pos, visible = camera:WorldToViewportPoint(hrp.Position)
-            local distanceValue = (camera.CFrame.Position - hrp.Position).Magnitude
-
-            if visible and distanceValue <= Settings.Max_Distance then
-                local scale = 1 / (pos.Z * math.tan(math.rad(camera.FieldOfView / 2)) * 2) * 100
-                local h = 60 * scale
-                dist.Text = tostring(math.floor(distanceValue)) .. "m"
-                dist.Position = Vector2.new(pos.X, pos.Y + h / 2 + 13)
-                dist.Color = Settings.Distance_Color
-                dist.Visible = true
-            else
-                dist.Visible = false
-            end
-        else
-            dist.Visible = false
-        end
-    end)
-end
-
-local function CreateFullESP(player)
-    if player == LocalPlayer then return end
-    createBoxESP(player)
-    CreateHealthESP(player)
-    CreateNameESP(player)
-    CreateDistanceESP(player)
-end
-
-for _, player in ipairs(Players:GetPlayers()) do
-    CreateFullESP(player)
-    player.CharacterAdded:Connect(function()
-        wait(1)
-        CreateFullESP(player)
-    end)
-end
-
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        wait(1)
-        CreateFullESP(player)
-    end)
-    if player.Character then
-        wait(1)
-        CreateFullESP(player)
-    end
+-- 🌀 Обертання
+local angle = 0
+RunService.RenderStepped:Connect(function(dt)
+	if spinningEnabled and crosshairEnabled then
+		angle += rotationSpeed * dt
+		horiz.Rotation = angle + orientation
+		vert.Rotation = angle + orientation
+	elseif crosshairEnabled then
+		horiz.Rotation = orientation
+		vert.Rotation = orientation
+	end
 end)
 
---=============================================================================================================================
+-- 🧩 Fluent UI інтеграція (RightGroupBox)
+CustomCrosshair:AddToggle('Crosshair_Toggle', {
+	Text = 'Crosshair',
+	Default = false,
+	Callback = function(Value)
+		crosshairEnabled = Value
+		UpdateCrosshair()
+	end
+})
+:AddColorPicker('Crosshair_Color', {
+	Default = color,
+	Title = 'Crosshair Color',
+	Callback = function(Value)
+		color = Value
+		UpdateCrosshair()
+	end
+})
 
-local ThemesSection = SettingsTab:Section({ Name = "Settings", Side = 1 })
+CustomCrosshair:AddToggle('CrosshairSpin_Toggle', {
+	Text = 'Spinning Crosshair',
+	Default = false,
+	Callback = function(Value)
+		spinningEnabled = Value
+	end
+})
 
-do
-    for Index, Value in Library.Theme do 
-        Library.ThemeColorpickers[Index] = ThemesSection:Label(Index, "Left"):Colorpicker({
-            Name = Index,
-            Flag = "Theme" .. Index,
-            Default = Value,
-            Callback = function(Value)
-                Library.Theme[Index] = Value
-                Library:ChangeTheme(Index, Value)
-            end
-        })
-    end
+CustomCrosshair:AddToggle('CrosshairOutline_Toggle', {
+	Text = 'Outline',
+	Default = false,
+	Callback = function(Value)
+		outlineEnabled = Value
+		UpdateCrosshair()
+	end
+})
 
-    ThemesSection:Dropdown({Name = "Themes list", Items = {"Default", "Bitchbot", "Onetap", "Aqua"}, Default = "Default", Callback = function(Value)
-        local ThemeData = Library.Themes[Value]
+CustomCrosshair:AddSlider('Crosshair_Size', {
+	Text = 'Crosshair Size',
+	Min = 8,
+	Max = 20,
+	Default = size,
+	Rounding = 1,
+	Callback = function(Value)
+		size = Value
+		UpdateCrosshair()
+	end
+})
 
-        if not ThemeData then 
-            return
-        end
+CustomCrosshair:AddSlider('Crosshair_Thickness', {
+	Text = 'Crosshair Thickness',
+	Min = 1,
+	Max = 5,
+	Default = thickness,
+	Rounding = 1,
+	Callback = function(Value)
+		thickness = Value
+		UpdateCrosshair()
+	end
+})
 
-        for Index, Value in Library.Theme do 
-            Library.Theme[Index] = ThemeData[Index]
-            Library:ChangeTheme(Index, ThemeData[Index])
+Library:SetWatermarkVisibility(true)
 
-            Library.ThemeColorpickers[Index]:Set(ThemeData[Index])
-        end
+-- Example of dynamically-updating watermark with common traits (fps and ping)
+local FrameTimer = tick()
+local FrameCounter = 0;
+local FPS = 120;
 
-        task.wait(0.3)
+local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
+    FrameCounter += 1;
 
-        Library:Thread(function() -- i do this because sometimes the themes dont update
-            for Index, Value in Library.Theme do 
-                Library.Theme[Index] = Library.Flags["Theme"..Index].Color
-                Library:ChangeTheme(Index, Library.Flags["Theme"..Index].Color)
-            end    
-        end)
-    end})
+    if (tick() - FrameTimer) >= 1 then
+        FPS = FrameCounter;
+        FrameTimer = tick();
+        FrameCounter = 0;
+    end;
 
-    local ThemeName
-    local SelectedTheme 
+    Library:SetWatermark(('NexusVision | %s fps | %s ms'):format(
+        math.floor(FPS),
+        math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+    ));
+end);
 
-    local ThemesListbox = ThemesSection:Listbox({
-        Name = "Themes List",
-        Flag = "Themes List",
-        Items = { },
-        Multi = false,
-        Default = nil,
-        Callback = function(Value)
-            SelectedTheme = Value
-        end
-    })
+Library.KeybindFrame.Visible = true; -- todo: add a function for this
 
-    ThemesSection:Textbox({
-        Name = "Name",
-        Flag = "Theme Name",
-        Default = "",
-        Placeholder = ". . .",
-        Callback = function(Value)
-            ThemeName = Value
-        end
-    })
+Library:OnUnload(function()
+    WatermarkConnection:Disconnect()
 
-    ThemesSection:Button({
-        Name = "Save Theme",
-        Callback = function()
-            if ThemeName == "" then 
-                return
-            end
+    print('Unloaded!')
+    Library.Unloaded = true
+end)
 
-            if not isfile(Library.Folders.Themes .. "/" .. ThemeName .. ".json") then
-                writefile(Library.Folders.Themes .. "/" .. ThemeName .. ".json", Library:GetTheme())
+local MenuGroup = Tabs['UI Settings']:AddLeftGroupbox('Menu')
 
-                Library:RefreshThemeList(ThemesListbox)
-            else
-                Library:Notification("Theme '" .. ThemeName .. ".json' already exists", 3, Color3.fromRGB(255, 0, 0))
-                return
-            end
-        end
-    }):SubButton({
-        Name = "Load Theme",
-        Callback = function()
-            if SelectedTheme then
-                Library:LoadTheme(readfile(Library.Folders.Themes .. "/" .. SelectedTheme))
-            end
-        end
-    })
+MenuGroup:AddButton('Unload', function() Library:Unload() end)
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true, Text = 'Menu keybind' })
 
-    ThemesSection:Button({
-        Name = "Refresh Themes",
-        Callback = function()
-            Library:RefreshThemeList(ThemesListbox)
-        end
-    })
+Library.ToggleKeybind = Options.MenuKeybind -- Allows you to have a custom keybind for the menu
 
-    Library:RefreshThemeList(ThemesListbox)
-end
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
 
-local ConfigsSection = SettingsTab:Section({  Name = "Configs", Side = 2 })
+SaveManager:IgnoreThemeSettings()
 
-do 
-    local ConfigName 
-    local SelectedConfig 
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
 
-    local ConfigsListbox = ConfigsSection:Listbox({
-        Name = "Configs list",
-        Flag = "Configs List",
-        Items = { },
-        Multi = false,
-        Default = nil,
-        Callback = function(Value)
-            SelectedConfig = Value
-        end
-    })
+ThemeManager:SetFolder('MyScriptHub')
+SaveManager:SetFolder('MyScriptHub/specific-game')
 
-    ConfigsSection:Textbox({
-        Name = "Name",
-        Flag = "Config Name",
-        Default = "",
-        Placeholder = ". . .",
-        Callback = function(Value)
-            ConfigName = Value
-        end
-    })
+SaveManager:BuildConfigSection(Tabs['UI Settings'])
 
-    ConfigsSection:Button({
-        Name = "Load Config",
-        Callback = function()
-            if SelectedConfig then
-                Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. SelectedConfig))
-            end
+ThemeManager:ApplyToTab(Tabs['UI Settings'])
 
-            Library:Thread(function()
-                task.wait(0.1)
-
-                for Index, Value in Library.Theme do 
-                    Library.Theme[Index] = Library.Flags["Theme"..Index].Color
-                    Library:ChangeTheme(Index, Library.Flags["Theme"..Index].Color)
-                end    
-            end)
-        end
-    }):SubButton({
-        Name = "Save Config",
-        Callback = function()
-            if SelectedConfig then
-                Library:SaveConfig(SelectedConfig)
-            end
-        end
-    })
-
-    ConfigsSection:Button({
-        Name = "Create Config",
-        Callback = function()
-            if ConfigName == "" then 
-                return
-            end
-
-            if not isfile(Library.Folders.Configs .. "/" .. ConfigName .. ".json") then
-                writefile(Library.Folders.Configs .. "/" .. ConfigName .. ".json", Library:GetConfig())
-
-                Library:RefreshConfigsList(ConfigsListbox)
-            else
-                Library:Notification("Config '" .. ConfigName .. ".json' already exists", 3, Color3.fromRGB(255, 0, 0))
-                return
-            end
-        end
-    }):SubButton({
-        Name = "Delete Config",
-        Callback = function()
-            if SelectedConfig then
-                Library:DeleteConfig(SelectedConfig)
-
-                Library:RefreshConfigsList(ConfigsListbox)
-            end
-        end
-    })
-
-    ConfigsSection:Button({
-        Name = "Refresh Configs",
-        Callback = function()
-            Library:RefreshConfigsList(ConfigsListbox)
-        end
-    })
-
-    Library:RefreshConfigsList(ConfigsListbox)
-
-    ConfigsSection:Label("Menu Keybind", "Left"):Keybind({Name = "Menu Keybind", Flag = "Menu Keybind", Default = Enum.KeyCode.RightControl, Mode = "Toggle", Callback = function(Value)
-        Library.MenuKeybind = Library.Flags["Menu Keybind"].Key
-    end})
-
-    ConfigsSection:Toggle({Name = "Watermark", Flag = "Watermark", Default = false, Callback = function(Value)
-        Watermark:SetVisibility(Value)
-    end})
-
-    ConfigsSection:Toggle({Name = "Keybind List", Flag = "Keybind List", Default = false, Callback = function(Value)
-        KeybindList:SetVisibility(Value)
-    end})
-
-    ConfigsSection:Dropdown({Name = "Style", Flag = "Tweening Style", Default = "Exponential", Items = {"Linear", "Sine", "Quad", "Cubic", "Quart", "Quint", "Exponential", "Circular", "Back", "Elastic", "Bounce"}, Callback = function(Value)
-        Library.Tween.Style = Enum.EasingStyle[Value]
-    end})
-
-    ConfigsSection:Dropdown({Name = "Direction", Flag = "Tweening Direction", Default = "Out", Items = {"In", "Out", "InOut"}, Callback = function(Value)
-        Library.Tween.Direction = Enum.EasingDirection[Value]
-    end})
-
-    ConfigsSection:Slider({Name = "Tweening Time", Min = 0, Max = 5, Default = 0.25, Decimals = 0.01, Flag = "Tweening Time", Callback = function(Value)
-        Library.Tween.Time = Value
-    end})
-
-    ConfigsSection:Button({Name = "Click to Join Discord It Notify", Callback = function()
-        Library:Notification("https://discord.gg/RF23aMgf", 5, Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255)))
-    end})
-
-    ConfigsSection:Button({Name = "Unload UI", Callback = function()
-        Library:Unload()
-    end})
-end
+SaveManager:LoadAutoloadConfig()
