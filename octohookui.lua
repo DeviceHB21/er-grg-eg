@@ -113,11 +113,10 @@
 
 --]]
 
--- // load
 local startup_args = ({...})[1] or {}
 
 if library ~= nil then
-    library:Destroy()
+    library:UnloadUI()
 end
 
 local themes = {
