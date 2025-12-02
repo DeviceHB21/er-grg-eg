@@ -2631,7 +2631,7 @@ function library:Init()
 	self:Create("ImageLabel", {
 		Size = UDim2.new(1, 0, 1, 0),
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://",
+		Image = "rbxassetid://2592362371",
 		ImageColor3 = Color3.fromRGB(60, 60, 60),
 		ScaleType = Enum.ScaleType.Slice,
 		SliceCenter = Rect.new(2, 2, 62, 62),
@@ -2642,13 +2642,13 @@ function library:Init()
 		Size = UDim2.new(1, -2, 1, -2),
 		Position = UDim2.new(0, 1, 0, 1),
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://",
+		Image = "rbxassetid://2592362371",
 		ImageColor3 = Color3.new(),
 		ScaleType = Enum.ScaleType.Slice,
 		SliceCenter = Rect.new(2, 2, 62, 62),
 		Parent = self.main
 	})
-
+	
 	self.top.InputBegan:connect(function(input)
 		if input.UserInputType.Name == "MouseButton1" then
 			dragObject = self.main
