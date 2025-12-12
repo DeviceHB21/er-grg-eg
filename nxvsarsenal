@@ -1145,23 +1145,25 @@ Gun:AddToggle('InfiniteAmmo2', {
 	end,
 })
 
+-- Fast Reload Toggle
 Gun:AddToggle('FastReload', {
-	Text = 'Fast Reload',
-
-	Default = false,
-	Callback = function(x)
-        for _, v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
-            if v:FindFirstChild("ReloadTime") then
-                if x then
+    Text = 'Fast Reload',
+    Default = false,
+    Callback = function(state)
+        for _, v in pairs(game.ReplicatedStorage.Weapons:GetDescendants()) do
+            -- ReloadTime
+            if v:FindFirstChild("ReloadTime") and v.ReloadTime:IsA("NumberValue") then
+                if state then
                     originalValues.ReloadTime[v] = originalValues.ReloadTime[v] or v.ReloadTime.Value
                     v.ReloadTime.Value = 0.01
                 else
                     v.ReloadTime.Value = originalValues.ReloadTime[v] or 0.8
                 end
             end
-            
-            if v:FindFirstChild("EReloadTime") then
-                if x then
+
+            -- EReloadTime (Emergency Reload Time)
+            if v:FindFirstChild("EReloadTime") and v.EReloadTime:IsA("NumberValue") then
+                if state then
                     originalValues.EReloadTime[v] = originalValues.EReloadTime[v] or v.EReloadTime.Value
                     v.EReloadTime.Value = 0.01
                 else
@@ -1169,16 +1171,18 @@ Gun:AddToggle('FastReload', {
                 end
             end
         end
-	end
+    end
 })
 
+-- Always Auto Toggle
 Gun:AddToggle('AlwaysAuto', {
-	Text = 'Always Auto',
-
-	Default = false,
-	Callback = function(state)
+    Text = 'Always Auto',
+    Default = false,
+    Callback = function(state)
         for _, v in pairs(game.ReplicatedStorage.Weapons:GetDescendants()) do
-            if v.Name == "Auto" or v.Name == "AutoFire" or v.Name == "Automatic" or v.Name == "AutoShoot" or v.Name == "AutoGun" then
+            if v:IsA("BoolValue") and (v.Name == "Auto" or v.Name == "AutoFire" or
+                                       v.Name == "Automatic" or v.Name == "AutoShoot" or
+                                       v.Name == "AutoGun") then
                 if state then
                     originalValues.Auto[v] = originalValues.Auto[v] or v.Value
                     v.Value = true
@@ -1187,26 +1191,24 @@ Gun:AddToggle('AlwaysAuto', {
                 end
             end
         end
-	end
+    end
 })
 
 local NoSpreadValue = 0
 
--- 🟦 ПЕРЕМИКАЧ No Spread
 Gun:AddToggle('NoSpread_Toggle', {
     Text = 'No Spread',
     Default = false,
-
     Callback = function(state)
         for _, v in pairs(game.ReplicatedStorage.Weapons:GetDescendants()) do
-            if v.Name == "MaxSpread" or v.Name == "Spread" or v.Name == "SpreadControl" then
-
+            if v:IsA("NumberValue") and (v.Name == "MaxSpread" or v.Name == "Spread" or v.Name == "SpreadControl") then
                 if state then
-                    -- save original
+                    -- Сохраняем оригинальное значение, если ещё не сохранили
                     originalValues.Spread[v] = originalValues.Spread[v] or v.Value
-                    -- convert slider (0–100) to game value (0–1)
+                    -- Устанавливаем 0 (или значение со слайдера, если используешь)
                     v.Value = NoSpreadValue / 100
                 else
+                    -- Восстанавливаем оригинал
                     v.Value = originalValues.Spread[v] or 1
                 end
             end
