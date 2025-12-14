@@ -507,7 +507,6 @@ task.spawn(function()
     local Camera = Workspace.CurrentCamera
     local ReplicatedFirst = game:GetService("ReplicatedFirst")
     local UIS = game:GetService("UserInputService")
-
     local LP = Players.LocalPlayer
     local Framework = require(ReplicatedFirst.Framework)
     local Wrapper = getupvalue(getupvalue(Framework.require, 1), 1)
@@ -523,21 +522,23 @@ task.spawn(function()
         AimbotTargetHitbox = "Head",
         AimbotDistanceCheck = false,
         AimbotMaxDistance = 1500,
-
         -- 🔇 SILENT AIM
         SilentEnabled = false,
         SilentHitChance = 100,
         SilentMaxDistance = 2000,
         SilentTargetType = "Closest To Mouse",
         SilentTargetHitbox = "Head",
-
+        -- 🛡️ GUN MODS
+        NoSpreadEnabled = false,
+        SpreadScale = 0,      -- 0 = повний no spread
+        NoRecoilEnabled = false,
+        RecoilScale = 0.1,    -- 0 = повний no recoil, 1 = оригінал
         -- ⚪ SNAP LINE
         SnapLine = false,
         SnapLineColor = Color3.fromRGB(255,255,255),
         SnapLineThickness = 2,
         SnapLineOutline = false,
         SnapLineOutlineTransparency = 0.9,
-
         -- 🟢 FOV
         FOVEnabled = true,
         FOVColor = Color3.fromRGB(0,255,0),
@@ -562,14 +563,11 @@ task.spawn(function()
             FOVOutline.Visible = false
             return
         end
-
         local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
         local radius = Settings.FOVRadius
         if Settings.FOVDynamic and Holding then
             radius = radius * 0.85
         end
-
-        -- ⚫️ Outline (задній шар)
         if Settings.FOVOutline then
             FOVOutline.Visible = true
             FOVOutline.Position = center
@@ -582,8 +580,6 @@ task.spawn(function()
         else
             FOVOutline.Visible = false
         end
-
-        -- 🟢 Основне коло (верхній шар)
         FOVCircle.Visible = true
         FOVCircle.Position = center
         FOVCircle.Radius = radius
@@ -597,21 +593,17 @@ task.spawn(function()
     local function GetClosestPlayer(targetType, hitbox, maxDistance)
         local closest, shortest = nil, math.huge
         local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
-
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LP and player.Character and player.Character:FindFirstChild(hitbox) then
                 local char = player.Character
                 local part = char[hitbox]
                 local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
                 if not onScreen then continue end
-
                 local dist3D = (LP.Character and LP.Character:FindFirstChild("HumanoidRootPart"))
                     and (LP.Character.HumanoidRootPart.Position - part.Position).Magnitude or math.huge
                 if dist3D > maxDistance then continue end
-
                 local dist2D = (Vector2.new(pos.X, pos.Y) - center).Magnitude
                 if dist2D > Settings.FOVRadius then continue end
-
                 local distance = (targetType == "Closest To Mouse") and dist2D or dist3D
                 if distance < shortest then
                     shortest = distance
@@ -629,23 +621,50 @@ task.spawn(function()
         if mousemoverel then mousemoverel(delta.X, delta.Y) end
     end
 
-    -- 💥 SILENT AIM HOOK
+    -- 🛡️ GUN MODS: No Spread & No Recoil (setupvalue ДО hook!)
+    local GetSpreadAngle = getupvalue(Bullets.Fire, 1)
+    local GetFireImpulse = getupvalue(Bullets.Fire, 6)
+
+    setupvalue(Bullets.Fire, 1, function(Character, CCamera, Weapon, ...)
+        if Settings.NoSpreadEnabled then
+            local OldMoveState = Character.MoveState
+            local OldZooming = Character.Zooming
+            local OldFirstPerson = CCamera.FirstPerson
+            Character.MoveState = "Walking"
+            Character.Zooming = true
+            CCamera.FirstPerson = true
+            local ReturnArgs = {GetSpreadAngle(Character, CCamera, Weapon, ...)}
+            Character.MoveState = OldMoveState
+            Character.Zooming = OldZooming
+            CCamera.FirstPerson = OldFirstPerson
+            return unpack(ReturnArgs) * Settings.SpreadScale
+        end
+        return GetSpreadAngle(Character, CCamera, Weapon, ...)
+    end)
+
+    setupvalue(Bullets.Fire, 6, function(...)
+        local impulse = {GetFireImpulse(...)}
+        if Settings.NoRecoilEnabled then
+            for i = 1, #impulse do
+                impulse[i] = impulse[i] * Settings.RecoilScale
+            end
+        end
+        return unpack(impulse)
+    end)
+
+    -- 💥 SILENT AIM HOOK (після setupvalue!)
     local oldFire
     oldFire = hookfunction(Bullets.Fire, function(w, c, _, g, origin, dir, ...)
         if not Settings.SilentEnabled then
             return oldFire(w, c, _, g, origin, dir, ...)
         end
-
         local target = GetClosestPlayer(Settings.SilentTargetType, Settings.SilentTargetHitbox, Settings.SilentMaxDistance)
-        if not target then
-            return oldFire(w, c, _, g, origin, dir, ...)
-        end
-
-        if math.random(1, 100) <= Settings.SilentHitChance then
+        if target and math.random(1, 100) <= Settings.SilentHitChance then
             local part = target:FindFirstChild(Settings.SilentTargetHitbox) or target:FindFirstChild("Head")
-            if part then dir = (part.Position - origin).Unit end
+            if part then
+                dir = (part.Position - origin).Unit
+            end
         end
-
         return oldFire(w, c, _, g, origin, dir, ...)
     end)
 
@@ -660,14 +679,12 @@ task.spawn(function()
     -- 🎥 MAIN LOOP
     RunService.RenderStepped:Connect(function()
         UpdateFOV()
-
         local target = GetClosestPlayer(Settings.AimbotTargetType, Settings.AimbotTargetHitbox, Settings.AimbotMaxDistance)
         if not target or not target:FindFirstChild(Settings.AimbotTargetHitbox) then
             SnapLine.Visible = false
             SnapOutline.Visible = false
             return
         end
-
         local part = target[Settings.AimbotTargetHitbox]
         local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
         if not onScreen then return end
@@ -675,8 +692,6 @@ task.spawn(function()
         if Settings.SnapLine then
             local from = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
             local to = Vector2.new(pos.X, pos.Y)
-
-            -- 🟤 Outline лінія (нижній шар)
             if Settings.SnapLineOutline then
                 SnapOutline.Visible = true
                 SnapOutline.From = from
@@ -688,8 +703,6 @@ task.spawn(function()
             else
                 SnapOutline.Visible = false
             end
-
-            -- 🔵 Основна лінія (поверх)
             SnapLine.Visible = true
             SnapLine.From = from
             SnapLine.To = to
@@ -707,149 +720,36 @@ task.spawn(function()
         end
     end)
 
-    -- ================= 🧩 UI (Fluent Renewed) =================
+    -- ================= 🧩 UI =================
     local Box = Tabs.Combat:AddLeftGroupbox('Aim Bot')
-
-    -- 🎯 AIMBOT
-    Box:AddToggle('Aimbot_Toggle', {
-        Text = 'Enable Aimbot',
-        Default = false,
-        Callback = function(v) Settings.AimbotEnabled = v end
-    })
-
-    Box:AddToggle('DistanceCheck_Toggle', {
-        Text = 'Aimbot Distance Check',
-        Default = false,
-        Callback = function(v) Settings.AimbotDistanceCheck = v end
-    })
-
-    Box:AddSlider('MaxDist_Slider', {
-        Text = 'Aimbot Max Distance',
-        Min = 100, Max = 3000, Default = 1500,
-        Rounding = 0,
-        Callback = function(v) Settings.AimbotMaxDistance = v end
-    })
-
-    Box:AddSlider('Smooth_Slider', {
-        Text = 'Smoothness',
-        Min = 0.1, Max = 2, Default = 0.5, Rounding = 1,
-        Callback = function(v) Settings.AimbotSmoothing = v end
-    })
-
-    Box:AddDropdown('Aimbot_Type', {
-        Text = 'Aimbot Target Type',
-        Default = 'Closest To Mouse',
-        Values = {'Closest To Mouse', 'Closest To Player'},
-        Callback = function(v) Settings.AimbotTargetType = v end
-    })
-
-    Box:AddDropdown('Aimbot_Hitbox', {
-        Text = 'Aimbot Hitbox',
-        Default = 'Head',
-        Values = {'Head','HumanoidRootPart','UpperTorso','LowerTorso'},
-        Callback = function(v) Settings.AimbotTargetHitbox = v end
-    })
+    Box:AddToggle('Aimbot_Toggle', {Text = 'Enable Aimbot', Default = false, Callback = function(v) Settings.AimbotEnabled = v end})
+    Box:AddToggle('DistanceCheck_Toggle', {Text = 'Aimbot Distance Check', Default = false, Callback = function(v) Settings.AimbotDistanceCheck = v end})
+    Box:AddSlider('MaxDist_Slider', {Text = 'Aimbot Max Distance', Min = 100, Max = 3000, Default = 1500, Rounding = 1, Callback = function(v) Settings.AimbotMaxDistance = v end})
+    Box:AddSlider('Smooth_Slider', {Text = 'Smoothness', Min = 0.1, Max = 2, Default = 0.5, Rounding = 1, Callback = function(v) Settings.AimbotSmoothing = v end})
+    Box:AddDropdown('Aimbot_Type', {Text = 'Aimbot Target Type', Default = 'Closest To Mouse', Values = {'Closest To Mouse', 'Closest To Player'}, Callback = function(v) Settings.AimbotTargetType = v end})
+    Box:AddDropdown('Aimbot_Hitbox', {Text = 'Aimbot Hitbox', Default = 'Head', Values = {'Head','HumanoidRootPart','UpperTorso','LowerTorso'}, Callback = function(v) Settings.AimbotTargetHitbox = v end})
 
     local SilentAimBox = Tabs.Combat:AddLeftGroupbox('Silent Aim')
+    SilentAimBox:AddToggle('Silent_Toggle', {Text = 'Enable Silent Aim', Default = false, Callback = function(v) Settings.SilentEnabled = v end})
+    SilentAimBox:AddSlider('HitChance_Slider', {Text = 'Hit Chance', Min = 1, Max = 100, Default = 100, Rounding = 1, Callback = function(v) Settings.SilentHitChance = v end})
+    SilentAimBox:AddSlider('MaxDistance_Slider', {Text = 'Max Distance', Min = 100, Max = 3000, Default = 2000, Rounding = 1, Callback = function(v) Settings.SilentMaxDistance = v end})
+    SilentAimBox:AddDropdown('Silent_Type', {Text = 'Silent Target Type', Default = 'Closest To Mouse', Values = {'Closest To Mouse', 'Closest To Player'}, Callback = function(v) Settings.SilentTargetType = v end})
+    SilentAimBox:AddDropdown('Silent_Hitbox', {Text = 'Silent Hitbox', Default = 'Head', Values = {'Head','HumanoidRootPart','UpperTorso','LowerTorso'}, Callback = function(v) Settings.SilentTargetHitbox = v end})
 
-    -- 🔇 SILENT AIM
-    SilentAimBox:AddToggle('Silent_Toggle', {
-        Text = 'Enable Silent Aim',
-        Default = false,
-        Callback = function(v) Settings.SilentEnabled = v end
-    })
+    local FOVBox = Tabs.Combat:AddRightGroupbox('FOV')
+    FOVBox:AddToggle('FOV_Toggle', {Text = 'Enable FOV', Default = true, Callback = function(v) Settings.FOVEnabled = v end}):AddColorPicker('FOVColor', {Default = Settings.FOVColor, Callback = function(c) Settings.FOVColor = c end})
+    FOVBox:AddToggle('FOVOutline_Toggle', {Text = 'FOV Outline', Default = true, Callback = function(v) Settings.FOVOutline = v end})
+    FOVBox:AddSlider('FOVRadius_Slider', {Text = 'Field of View', Min = 50, Max = 500, Default = 150, Rounding = 1,Callback = function(v) Settings.FOVRadius = v end})
+    FOVBox:AddSlider('FOVThickness_Slider', {Text = 'Circle Thickness', Min = 1, Max = 5, Default = 2, Rounding = 1, Callback = function(v) Settings.FOVThickness = v end})
 
-    SilentAimBox:AddSlider('HitChance_Slider', {
-        Text = 'Hit Chance',
-        Min = 1, Max = 100, Default = 100, Rounding = 0,
-        Callback = function(v) Settings.SilentHitChance = v end
-    })
+    local SnapBox = Tabs.Combat:AddRightGroupbox('Snap Line')
+    SnapBox:AddToggle('SnapLine_Toggle', {Text = 'Snap Line', Default = false, Callback = function(v) Settings.SnapLine = v end}):AddColorPicker('SnapColor', {Default = Settings.SnapLineColor, Callback = function(c) Settings.SnapLineColor = c end})
+    SnapBox:AddToggle('SnapOutline_Toggle', {Text = 'Snap Line Outline', Default = false, Callback = function(v) Settings.SnapLineOutline = v end})
+    SnapBox:AddSlider('SnapThickness_Slider', {Text = 'Snap Line Thickness', Min = 1, Max = 5, Default = 2, Rounding = 1, Callback = function(v) Settings.SnapLineThickness = v end})
 
-    SilentAimBox:AddSlider('MaxDistance_Slider', {
-        Text = 'Max Distance',
-        Min = 100, Max = 3000, Default = 2000, Rounding = 0,
-        Callback = function(v) Settings.SilentMaxDistance = v end
-    })
+        -- No Spread & No Recoil UI
+        local GunModsBox = Tabs.Combat:AddRightGroupbox('Gun Mods')
 
-    SilentAimBox:AddDropdown('Silent_Type', {
-        Text = 'Silent Target Type',
-        Default = 'Closest To Mouse',
-        Values = {'Closest To Mouse', 'Closest To Player'},
-        Callback = function(v) Settings.SilentTargetType = v end
-    })
-
-    SilentAimBox:AddDropdown('Silent_Hitbox', {
-        Text = 'Silent Hitbox',
-        Default = 'Head',
-        Values = {'Head','HumanoidRootPart','UpperTorso','LowerTorso'},
-        Callback = function(v) Settings.SilentTargetHitbox = v end
-    })
-
-    local Silent = Tabs.Combat:AddRightGroupbox('Fov')
-
-    Silent:AddToggle('FOV_Toggle', {
-        Text = 'Enable FOV',
-        Default = true,
-        Callback = function(v) Settings.FOVEnabled = v end
-    }):AddColorPicker('FOVColor', {
-        Default = Settings.FOVColor,
-        Title = 'FOV Color',
-        Callback = function(c) Settings.FOVColor = c end
-    })
-
-    Silent:AddToggle('FOVOutline_Toggle', {
-        Text = 'FOV Outline',
-        Default = true,
-        Callback = function(v) Settings.FOVOutline = v end
-    })
-
-    Silent:AddSlider('FOVRadius_Slider', {
-        Text = 'Field of View',
-        Min = 50, Max = 500, Default = 150,
-        Rounding = 0,
-        Callback = function(v) Settings.FOVRadius = v end
-    })
-
-    Silent:AddSlider('FOVThickness_Slider', {
-        Text = 'Circle Thickness',
-        Min = 1, Max = 5, Default = 2,
-        Rounding = 0,
-        Callback = function(v) Settings.FOVThickness = v end
-    })
-
-    local SilentAim = Tabs.Combat:AddRightGroupbox('Snap Line')
-
-    -- ⚪ SNAP LINE
-    SilentAim:AddToggle('SnapLine_Toggle', {
-        Text = 'Snap Line',
-        Default = false,
-        Callback = function(v) Settings.SnapLine = v end
-    }):AddColorPicker('SnapColor', {
-        Default = Settings.SnapLineColor,
-        Title = 'Snap Line Color',
-        Callback = function(c) Settings.SnapLineColor = c end
-    })
-
-    SilentAim:AddToggle('SnapOutline_Toggle', {
-        Text = 'Snap Line Outline',
-        Default = false,
-        Callback = function(v) Settings.SnapLineOutline = v end
-    })
-
-    SilentAim:AddSlider('SnapThickness_Slider', {
-        Text = 'Snap Line Thickness', 
-        Min = 1, 
-        Max = 5, 
-        Default = 2, 
-        Rounding = 0, 
-        Callback = function(v) Settings.SnapLineThickness = v end
-    })
-
-end)
-
-local GunMods = Tabs.Combat:AddRightGroupbox('Gun Mods')
-
-task.spawn(function()
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local ReplicatedFirst = game:GetService("ReplicatedFirst")
     local Players = game:GetService("Players")
@@ -873,7 +773,7 @@ task.spawn(function()
     --------------------------------------------------------------------
 
     -- ⚡ INSTANT RELOAD
-    GunMods:AddToggle('InstantReload_Toggle', {
+    GunModsBox:AddToggle('InstantReload_Toggle', {
         Text = 'Instant Reload',
         Default = false,
         Risky = true,
@@ -898,7 +798,7 @@ task.spawn(function()
     --------------------------------------------------------------------
     -- 🔓 UNLOCK FIREMODES
     --------------------------------------------------------------------
-    GunMods:AddToggle('UnlockFiremodes_Toggle', {
+    GunModsBox:AddToggle('UnlockFiremodes_Toggle', {
         Text = 'Unlock Firemodes',
         Default = false,
         Callback = function(State)
@@ -934,40 +834,11 @@ task.spawn(function()
         end
     })
 
-    --------------------------------------------------------------------
-    -- 💣 NO RECOIL (Button)
-    --------------------------------------------------------------------
-    GunMods:AddButton({
-        Text = 'No Recoil',
-        DoubleClick = false,
-        Func = function()
-            local str = 'KickUpCameraInfluence'
-            local str2 = 'ShiftGunInfluence'
-            local str3 = 'ShiftCameraInfluence'
-            local str4 = 'RaiseInfluence'
-            local str5 = 'KickUpSpeed'
+    GunModsBox:AddToggle('NoSpread_Toggle', {Text = 'No Spread', Default = false, Callback = function(v) Settings.NoSpreadEnabled = v end})
+    GunModsBox:AddSlider('SpreadAmount_Slider', {Text = 'Spread Amount', Min = 0, Max = 100, Default = 0, Rounding = 1, Callback = function(v) Settings.SpreadScale = v / 100 end})
 
-            local count = 0
-            for _, v in pairs(getgc(true)) do
-                if type(v) == 'table' and rawget(v, str) then
-                    setreadonly(v, false)
-                    v[str] = 0
-                    v[str2] = 0
-                    v[str3] = 0
-                    v[str4] = 0
-                    v[str5] = 10000000
-                    setreadonly(v, true)
-                    count += 1
-                end
-            end
-
-            if count > 0 then
-                print((""):format(count))
-            else
-                print("")
-            end
-        end
-    })
+    GunModsBox:AddToggle('NoRecoil_Toggle', {Text = 'No Recoil', Default = false, Callback = function(v) Settings.NoRecoilEnabled = v end})
+    GunModsBox:AddSlider('RecoilControl_Slider', {Text = 'Recoil Control', Min = 0, Max = 100, Default = 10, Rounding = 1, Callback = function(v) Settings.RecoilScale = v / 100 end})
 
 end)
 
