@@ -2542,7 +2542,7 @@ CloudsModification:AddSlider('CloudsDensity_Slider', {
 	Min = 0,
 	Max = 1,
 	Default = 0.5,
-	Rounding = 2, -- ✅
+	Rounding = 2, 
 	Callback = function(Value)
 		cloudDensity = Value
 	end
@@ -2690,19 +2690,16 @@ CustomSkyBox:AddDropdown('SkyboxSelector', {
 local BuletTracer = Tabs.Visuals:AddRightGroupbox('Bulet Tracer')
 
 task.spawn(function()
--- ⚙️ CONFIG
 local world_utilities = {
 	BulletTracer = false,
 	BulletTracerColor = Color3.fromRGB(255, 255, 255),
 	BulletTracerLength = 3
 }
 
--- 📁 STORAGE
 local BulletTracerFolder = Instance.new("Folder")
 BulletTracerFolder.Name = "BulletTracers"
 BulletTracerFolder.Parent = workspace
 
--- 💫 FUNCTION
 function createBulletTracerBeam(origin, direct)
 	if not world_utilities.BulletTracer or not origin or not direct then return end
 
@@ -2797,7 +2794,6 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- ⚙️ Self Chams
 local enabled = false
 local color = Color3.fromRGB(255, 255, 255)
 local material = Enum.Material.ForceField
@@ -2880,7 +2876,6 @@ player.CharacterAdded:Connect(function(char)
 	end
 end)
 
--- ⚙️ Weapon Chams
 local gunChamsEnabled = false
 local chamColor = Color3.fromRGB(250, 250, 250)
 local chamMaterial = Enum.Material.Plastic
@@ -2960,12 +2955,10 @@ LocalPlayer:AddDropdown('GunChams_Material', {
 
 local CustomCrosshair = Tabs.Visuals:AddRightGroupbox('Custom Crosshair')
 
--- 🧠 Сервіси
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 
--- ⚙️ Змінні
 local crosshairEnabled = false
 local spinningEnabled = false
 local outlineEnabled = false
@@ -2975,14 +2968,12 @@ local size = 12
 local thickness = 2
 local orientation = 0
 
--- 🪟 GUI створення
 local gui = Instance.new("ScreenGui")
 gui.Name = "RotatingCrosshair"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.Parent = lp:WaitForChild("PlayerGui")
 
--- Центральна група для автопозиціювання
 local group = Instance.new("Frame")
 group.AnchorPoint = Vector2.new(0.5, 0.5)
 group.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -2991,7 +2982,6 @@ group.BackgroundTransparency = 1
 group.BorderSizePixel = 0
 group.Parent = gui
 
--- Центр
 local center = Instance.new("Frame")
 center.AnchorPoint = Vector2.new(0.5, 0.5)
 center.Size = UDim2.new(0, thickness, 0, thickness)
@@ -3000,7 +2990,6 @@ center.BorderSizePixel = 0
 center.Visible = false
 center.Parent = group
 
--- Горизонтальна лінія
 local horiz = Instance.new("Frame")
 horiz.AnchorPoint = Vector2.new(0.5, 0.5)
 horiz.Size = UDim2.new(0, size, 0, thickness)
@@ -3009,7 +2998,6 @@ horiz.BorderSizePixel = 0
 horiz.Visible = false
 horiz.Parent = group
 
--- Вертикальна лінія
 local vert = Instance.new("Frame")
 vert.AnchorPoint = Vector2.new(0.5, 0.5)
 vert.Size = UDim2.new(0, thickness, 0, size)
@@ -3018,7 +3006,6 @@ vert.BorderSizePixel = 0
 vert.Visible = false
 vert.Parent = group
 
--- Outline (чорна обводка)
 local outline = Instance.new("UIStroke")
 outline.Thickness = 1
 outline.Color = Color3.new(0, 0, 0)
@@ -3028,7 +3015,6 @@ outline.Parent = horiz
 local outline2 = outline:Clone()
 outline2.Parent = vert
 
--- 🔄 Оновлення вигляду
 local function UpdateCrosshair()
 	horiz.BackgroundColor3 = color
 	vert.BackgroundColor3 = color
@@ -3042,7 +3028,6 @@ local function UpdateCrosshair()
 	outline2.Enabled = outlineEnabled
 end
 
--- 🌀 Обертання
 local angle = 0
 RunService.RenderStepped:Connect(function(dt)
 	if spinningEnabled and crosshairEnabled then
@@ -3055,7 +3040,6 @@ RunService.RenderStepped:Connect(function(dt)
 	end
 end)
 
--- 🧩 Fluent UI інтеграція (RightGroupBox)
 CustomCrosshair:AddToggle('Crosshair_Toggle', {
 	Text = 'Crosshair',
 	Default = false,
