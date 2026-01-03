@@ -989,6 +989,7 @@ end)
 
 local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Player Esp')
 
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -998,9 +999,9 @@ local Camera = workspace.CurrentCamera
 local flags = {}
 local settings = {
     maxHPVisibility = 100,
-    boxType = "Boxes",       -- Boxes / Corners
-    boxRender = "Dynamic",   -- Dynamic / Static
-    metric = "Meters",       -- Meters / Studs
+    boxType = "Boxes", -- Boxes / Corners
+    boxRender = "Dynamic", -- Dynamic / Static
+    metric = "Meters", -- Meters / Studs
     useDisplayName = true
 }
 
@@ -1028,6 +1029,38 @@ LeftGroupBox:AddToggle('box', {
     end
 })
 
+-- 🟦 Fill Box
+LeftGroupBox:AddToggle('fill box', {
+    Text = 'Fill Box',
+    Default = false,
+    Callback = function(Value)
+        flags["fill box"] = Value
+    end
+})
+:AddColorPicker('color fill box', {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = 'Fill Box',
+    Callback = function(Value)
+        flags["color fill box"] = Value
+    end
+})
+
+-- 🦴 Skeleton ESP
+LeftGroupBox:AddToggle('skeleton', {
+    Text = 'Skeleton',
+    Default = false,
+    Callback = function(Value)
+        flags["skeleton"] = Value
+    end
+})
+:AddColorPicker('color skeleton', {
+    Default = Color3.new(1, 1, 1),
+    Title = 'Skeleton Color',
+    Callback = function(Value)
+        flags["color skeleton"] = Value
+    end
+})
+
 -- ❤️ Health Bar
 LeftGroupBox:AddToggle('box bar', {
     Text = 'Health Bar',
@@ -1037,14 +1070,14 @@ LeftGroupBox:AddToggle('box bar', {
     end
 })
 :AddColorPicker('color hp full', {
-    Default = Color3.fromRGB(255, 255, 255),
+    Default = Color3.fromRGB(0, 255, 0),
     Title = 'Full Health Color',
     Callback = function(Value)
         flags["color hp full"] = Value
     end
 })
 :AddColorPicker('color hp low', {
-    Default = Color3.fromRGB(255, 255, 255),
+    Default = Color3.fromRGB(255, 0, 0),
     Title = 'Low Health Color',
     Callback = function(Value)
         flags["color hp low"] = Value
@@ -1059,7 +1092,6 @@ LeftGroupBox:AddToggle('box number hear', {
     end
 })
 
--- 🧍‍♂️ Name
 -- 🧍‍♂️ Name (з власним кольором)
 LeftGroupBox:AddToggle('box name', {
     Text = 'Show Name',
@@ -1136,6 +1168,7 @@ LeftGroupBox:AddSlider('dis chek', {
     end
 })
 
+
 LeftGroupBox:AddButton({
     Text = "Map Esp",
     DoubleClick = false,
@@ -1145,8 +1178,8 @@ LeftGroupBox:AddButton({
     end
 })
 
+-- ⚙️ ESP Settings Groupbox
 local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Esp Settings')
-
 LeftGroupBox:AddSlider('max hp visibility', {
     Text = "Max HP Visibility",
     Min = 0,
@@ -1196,65 +1229,104 @@ LeftGroupBox:AddToggle('use display name', {
 -- === CREATE ESP OBJECT ===
 local function CreateESP()
     local esp = {}
-
+    
+    -- Box
     esp.BoxOutline = Drawing.new("Square")
     esp.BoxOutline.Visible = false
     esp.BoxOutline.Color = Color3.new(0,0,0)
     esp.BoxOutline.Thickness = 2
-
+    esp.BoxOutline.Filled = false
+    
     esp.Box = Drawing.new("Square")
     esp.Box.Visible = false
     esp.Box.Color = Color3.new(1,1,1)
     esp.Box.Thickness = 1
-
+    esp.Box.Filled = false
+    
+    -- Fill Box
+    esp.FillBox = Drawing.new("Square")
+    esp.FillBox.Visible = false
+    esp.FillBox.Color = Color3.new(1,1,1)
+    esp.FillBox.Thickness = 1
+    esp.FillBox.Filled = true
+    esp.FillBox.Transparency = 0.3
+    
+    -- Gradient Fill Box (нове!)
+    esp.GradientFillBox = {}
+    esp.GradientFillBox.Segments = 10 -- Кількість сегментів для градієнта
+    esp.GradientFillBox.SegmentObjects = {}
+    
+    -- Створюємо сегменти для градієнта
+    for i = 1, esp.GradientFillBox.Segments do
+        local segment = Drawing.new("Square")
+        segment.Visible = false
+        segment.Filled = true
+        segment.Thickness = 1
+        table.insert(esp.GradientFillBox.SegmentObjects, segment)
+    end
+    
+    -- Corner Lines
     esp.CornerLines = {}
     for i = 1, 8 do
         local line = Drawing.new("Line")
         line.Visible = false
         table.insert(esp.CornerLines, line)
     end
-
+    
+    -- Skeleton Lines
+    esp.SkeletonLines = {}
+    for i = 1, 20 do
+        local line = Drawing.new("Line")
+        line.Visible = false
+        table.insert(esp.SkeletonLines, line)
+    end
+    
+    -- Health Bar
     esp.HealthBarOutline = Drawing.new("Square")
     esp.HealthBarOutline.Visible = false
     esp.HealthBarOutline.Color = Color3.new(0,0,0)
-    esp.HealthBarOutline.Thickness = 4
-
+    esp.HealthBarOutline.Thickness = 1
+    esp.HealthBarOutline.Filled = false
+    
     esp.HealthBar = Drawing.new("Square")
     esp.HealthBar.Visible = false
-    esp.HealthBar.Thickness = 2
-
+    esp.HealthBar.Thickness = 1
+    esp.HealthBar.Filled = true
+    
+    -- Text Elements
     esp.NameText = Drawing.new("Text")
     esp.NameText.Visible = false
     esp.NameText.Outline = true
     esp.NameText.Center = true
     esp.NameText.Size = 15
-    esp.NameText.Font = 0 
-
+    esp.NameText.Font = 1
+    
     esp.DistanceText = Drawing.new("Text")
     esp.DistanceText.Visible = false
     esp.DistanceText.Outline = true
     esp.DistanceText.Center = true
     esp.DistanceText.Size = 14
-    esp.DistanceText.Font = 0
-
+    esp.DistanceText.Font = 1
+    
     esp.HealthPercentText = Drawing.new("Text")
     esp.HealthPercentText.Visible = false
     esp.HealthPercentText.Outline = true
     esp.HealthPercentText.Center = true
     esp.HealthPercentText.Size = 14
-    esp.HealthPercentText.Font = 0
-
-    esp.TracerLine = Drawing.new("Line")
-    esp.TracerLine.Visible = false
-    esp.TracerLine.Thickness = 1
-
+    esp.HealthPercentText.Font = 1
+    
     esp.ItemText = Drawing.new("Text")
     esp.ItemText.Visible = false
     esp.ItemText.Outline = true
     esp.ItemText.Center = true
     esp.ItemText.Size = 14
-    esp.ItemText.Font = 0
-
+    esp.ItemText.Font = 1
+    
+    -- Tracer
+    esp.TracerLine = Drawing.new("Line")
+    esp.TracerLine.Visible = false
+    esp.TracerLine.Thickness = 1
+    
     return esp
 end
 
@@ -1265,7 +1337,15 @@ local function RemoveESP(player)
     if ESPTable[player] then
         for _, v in pairs(ESPTable[player]) do
             if typeof(v) == "table" then
-                for _, line in ipairs(v) do pcall(line.Remove, line) end
+                if v.SegmentObjects then -- Для градієнта
+                    for _, segment in ipairs(v.SegmentObjects) do
+                        pcall(segment.Remove, segment)
+                    end
+                else -- Для інших таблиць
+                    for _, line in ipairs(v) do 
+                        pcall(line.Remove, line) 
+                    end
+                end
             else
                 pcall(v.Remove, v)
             end
@@ -1280,9 +1360,42 @@ local function AddESP(player)
     end
 end
 
-for _, p in ipairs(Players:GetPlayers()) do AddESP(p) end
+for _, p in ipairs(Players:GetPlayers()) do 
+    AddESP(p) 
+end
+
 Players.PlayerAdded:Connect(AddESP)
 Players.PlayerRemoving:Connect(RemoveESP)
+
+-- === SKELETON BONE CONNECTIONS ===
+local BONE_CONNECTIONS = {
+    -- Torso connections
+    {"HumanoidRootPart", "LowerTorso"},
+    {"LowerTorso", "UpperTorso"},
+    
+    -- Left Arm
+    {"UpperTorso", "LeftUpperArm"},
+    {"LeftUpperArm", "LeftLowerArm"},
+    {"LeftLowerArm", "LeftHand"},
+    
+    -- Right Arm
+    {"UpperTorso", "RightUpperArm"},
+    {"RightUpperArm", "RightLowerArm"},
+    {"RightLowerArm", "RightHand"},
+    
+    -- Left Leg
+    {"LowerTorso", "LeftUpperLeg"},
+    {"LeftUpperLeg", "LeftLowerLeg"},
+    {"LeftLowerLeg", "LeftFoot"},
+    
+    -- Right Leg
+    {"LowerTorso", "RightUpperLeg"},
+    {"RightUpperLeg", "RightLowerLeg"},
+    {"RightLowerLeg", "RightFoot"},
+    
+    -- Head
+    {"UpperTorso", "Head"},
+}
 
 -- === MAIN RENDER LOOP ===
 RunService.RenderStepped:Connect(function()
@@ -1290,7 +1403,15 @@ RunService.RenderStepped:Connect(function()
         for _, esp in pairs(ESPTable) do
             for _, v in pairs(esp) do
                 if typeof(v) == "table" then
-                    for _, l in ipairs(v) do l.Visible = false end
+                    if v.SegmentObjects then -- Для градієнта
+                        for _, segment in ipairs(v.SegmentObjects) do
+                            segment.Visible = false
+                        end
+                    else -- Для інших таблиць
+                        for _, l in ipairs(v) do 
+                            l.Visible = false 
+                        end
+                    end
                 else
                     v.Visible = false
                 end
@@ -1298,199 +1419,320 @@ RunService.RenderStepped:Connect(function()
         end
         return
     end
-
+    
     local camPos = Camera.CFrame.Position
     local maxDistance = flags["dis chek"] or 10000
     local viewSize = Camera.ViewportSize
     local screenCenter = Vector2.new(viewSize.X/2, viewSize.Y)
-
+    
     for player, esp in pairs(ESPTable) do
         local char = player.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         local hum = char and char:FindFirstChildOfClass("Humanoid")
-
+        
         if hrp and hum and hum.Health > 0 then
             local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
             local distance = (camPos - hrp.Position).Magnitude
-
+            
             if not onScreen or distance > maxDistance then
                 for _, v in pairs(esp) do
                     if typeof(v) == "table" then
-                        for _, l in ipairs(v) do l.Visible = false end
+                        if v.SegmentObjects then
+                            for _, segment in ipairs(v.SegmentObjects) do
+                                segment.Visible = false
+                            end
+                        else
+                            for _, l in ipairs(v) do 
+                                l.Visible = false 
+                            end
+                        end
                     else
                         v.Visible = false
                     end
                 end
                 continue
             end
-
+            
             local boxWidth, boxHeight = 40, 60
             if settings.boxRender == "Dynamic" then
-                local scale = math.clamp(100 / distance, 0, 300)
-                boxWidth, boxHeight = 40*scale, 60*scale
+                local scale = math.clamp(100 / distance, 0.5, 2)
+                boxWidth, boxHeight = 40 * scale, 60 * scale
             end
-
+            
             local xPos, yPos = pos.X - boxWidth/2, pos.Y - boxHeight/2
-
-            local boxEnabled    = flags["box"]
-            local barEnabled    = flags["box bar"]
-            local nameEnabled   = flags["box name"]
-            local discrEnabled  = flags["box discr"]
-            local numberEnabled = flags["box number hear"]
-            local itemEnabled   = flags["box item"]
-
-            local boxColor      = flags["color box"] or Color3.new(1,1,1)
-            local tracerColor   = flags["color tracer"] or Color3.new(1,1,1)
-            local discrColor    = flags["distance"] or Color3.new(1,1,1)
-            local itemColor     = flags["color item"] or Color3.new(1,1,1)
-
+            
+            -- Get colors
+            local boxColor = flags["color box"] or Color3.new(1,1,1)
+            local fillColor = flags["color fill box"] or Color3.fromRGB(255, 255, 255)
+            local skeletonColor = flags["color skeleton"] or Color3.new(1,1,1)
+            local tracerColor = flags["color tracer"] or Color3.new(1,1,1)
+            local discrColor = flags["distance"] or Color3.new(1,1,1)
+            local itemColor = flags["color item"] or Color3.new(1,1,1)
+            
+            -- Звичайний Fill Box
+            if flags["fill box"] then
+                esp.FillBox.Size = Vector2.new(boxWidth, boxHeight)
+                esp.FillBox.Position = Vector2.new(xPos, yPos)
+                esp.FillBox.Color = fillColor
+                esp.FillBox.Transparency = 0.3
+                esp.FillBox.Visible = true
+            else
+                esp.FillBox.Visible = false
+            end
+            
+            -- Gradient Fill Box (нове!)
+            if flags["gradient_fill_box"] then
+                local segments = esp.GradientFillBox.Segments
+                local segmentHeight = boxHeight / segments
+                local gradientTop = flags["gradient_top_color"] or Color3.fromRGB(255, 255, 255)
+                local gradientBottom = flags["gradient_bottom_color"] or Color3.fromRGB(0, 0, 0)
+                local baseTransparency = flags["gradient_transparency"] or 0.3
+                
+                for i = 1, segments do
+                    local segment = esp.GradientFillBox.SegmentObjects[i]
+                    if not segment then
+                        segment = Drawing.new("Square")
+                        segment.Filled = true
+                        segment.Thickness = 1
+                        esp.GradientFillBox.SegmentObjects[i] = segment
+                    end
+                    
+                    -- Розраховуємо інтерполяцію кольору
+                    local t = (i - 1) / (segments - 1)
+                    local color = gradientTop:Lerp(gradientBottom, t)
+                    
+                    -- Розраховуємо прозорість (злегка збільшуємо донизу)
+                    local transparency = baseTransparency + (t * 0.3)
+                    
+                    -- Розраховуємо позицію сегмента
+                    local segmentY = yPos + (i - 1) * segmentHeight
+                    
+                    segment.Size = Vector2.new(boxWidth, math.ceil(segmentHeight))
+                    segment.Position = Vector2.new(xPos, segmentY)
+                    segment.Color = color
+                    segment.Transparency = transparency
+                    segment.Visible = true
+                end
+                
+                -- Ховаємо звичайний fill box
+                esp.FillBox.Visible = false
+            else
+                -- Ховаємо всі сегменти градієнта
+                for _, segment in ipairs(esp.GradientFillBox.SegmentObjects) do
+                    segment.Visible = false
+                end
+            end
+            
             -- Box Type handling
-            if boxEnabled then
+            if flags["box"] then
                 if settings.boxType == "Boxes" then
                     -- Main Box
                     esp.Box.Size = Vector2.new(boxWidth, boxHeight)
                     esp.Box.Position = Vector2.new(xPos, yPos)
                     esp.Box.Color = boxColor
                     esp.Box.Visible = true
-
+                    
                     esp.BoxOutline.Size = esp.Box.Size
                     esp.BoxOutline.Position = esp.Box.Position
                     esp.BoxOutline.Visible = true
-
+                    
                     -- Hide corner lines
-                    for _, l in ipairs(esp.CornerLines) do l.Visible = false end
+                    for _, l in ipairs(esp.CornerLines) do 
+                        l.Visible = false 
+                    end
+                    
                 elseif settings.boxType == "Corners" then
-                    -- Hide main box
-                    esp.Box.Visible, esp.BoxOutline.Visible = false, false
-
+                    -- Hide main box and fill box
+                    esp.Box.Visible = false
+                    esp.BoxOutline.Visible = false
+                    
                     -- Draw corner lines
-                    local cornerLen = boxWidth*0.25
+                    local cornerLen = boxWidth * 0.25
                     local lines = esp.CornerLines
                     local cx, cy, w, h = xPos, yPos, boxWidth, boxHeight
+                    
                     local corners = {
-                        {cx, cy, cx+cornerLen, cy},
-                        {cx, cy, cx, cy+cornerLen},
-                        {cx+w, cy, cx+w-cornerLen, cy},
-                        {cx+w, cy, cx+w, cy+cornerLen},
-                        {cx, cy+h, cx+cornerLen, cy+h},
-                        {cx, cy+h, cx, cy+h-cornerLen},
-                        {cx+w, cy+h, cx+w-cornerLen, cy+h},
-                        {cx+w, cy+h, cx+w, cy+h-cornerLen}
+                        {cx, cy, cx+cornerLen, cy},               -- Top Left -> Right
+                        {cx, cy, cx, cy+cornerLen},               -- Top Left -> Down
+                        {cx+w, cy, cx+w-cornerLen, cy},           -- Top Right -> Left
+                        {cx+w, cy, cx+w, cy+cornerLen},           -- Top Right -> Down
+                        {cx, cy+h, cx+cornerLen, cy+h},           -- Bottom Left -> Right
+                        {cx, cy+h, cx, cy+h-cornerLen},           -- Bottom Left -> Up
+                        {cx+w, cy+h, cx+w-cornerLen, cy+h},       -- Bottom Right -> Left
+                        {cx+w, cy+h, cx+w, cy+h-cornerLen}        -- Bottom Right -> Up
                     }
+                    
                     for i, c in ipairs(corners) do
                         local line = lines[i]
-                        line.From = Vector2.new(c[1], c[2])
-                        line.To = Vector2.new(c[3], c[4])
-                        line.Color = boxColor
-                        line.Visible = true
+                        if line then
+                            line.From = Vector2.new(c[1], c[2])
+                            line.To = Vector2.new(c[3], c[4])
+                            line.Color = boxColor
+                            line.Visible = true
+                        end
                     end
                 end
             else
-                esp.Box.Visible, esp.BoxOutline.Visible = false, false
-                for _, l in ipairs(esp.CornerLines) do l.Visible = false end
+                esp.Box.Visible = false
+                esp.BoxOutline.Visible = false
+                for _, l in ipairs(esp.CornerLines) do 
+                    l.Visible = false 
+                end
             end
-
+            
+            -- Skeleton ESP
+            if flags["skeleton"] then
+                local boneLines = esp.SkeletonLines
+                local boneIndex = 1
+                
+                for _, connection in ipairs(BONE_CONNECTIONS) do
+                    local bone1 = char:FindFirstChild(connection[1])
+                    local bone2 = char:FindFirstChild(connection[2])
+                    
+                    if bone1 and bone2 then
+                        local pos1, onScreen1 = Camera:WorldToViewportPoint(bone1.Position)
+                        local pos2, onScreen2 = Camera:WorldToViewportPoint(bone2.Position)
+                        
+                        if onScreen1 and onScreen2 then
+                            local line = boneLines[boneIndex]
+                            if not line then
+                                line = Drawing.new("Line")
+                                boneLines[boneIndex] = line
+                            end
+                            
+                            line.From = Vector2.new(pos1.X, pos1.Y)
+                            line.To = Vector2.new(pos2.X, pos2.Y)
+                            line.Color = skeletonColor
+                            line.Thickness = 1.5
+                            line.Visible = true
+                            
+                            boneIndex = boneIndex + 1
+                        end
+                    end
+                end
+                
+                -- Hide unused skeleton lines
+                for i = boneIndex, #boneLines do
+                    if boneLines[i] then
+                        boneLines[i].Visible = false
+                    end
+                end
+            else
+                for _, line in ipairs(esp.SkeletonLines) do
+                    line.Visible = false
+                end
+            end
+            
             -- Tracer
             if flags["tbox"] then
                 esp.TracerLine.From = screenCenter
-                esp.TracerLine.To = Vector2.new(pos.X,pos.Y)
+                esp.TracerLine.To = Vector2.new(pos.X, pos.Y)
                 esp.TracerLine.Color = tracerColor
                 esp.TracerLine.Visible = true
             else
                 esp.TracerLine.Visible = false
             end
-
-            -- Health bar + number
-            local healthPercent
--- === PERFECT HP BAR FOR YOUR BOX SYSTEM ===
-if barEnabled then
-    local hp = hum.Health
-    local maxhp = hum.MaxHealth
-    local perc = math.clamp(hp / maxhp, 0, 1)
-
-    local lowColor  = flags["color hp low"]  or Color3.fromRGB(255,0,0)
-    local fullColor = flags["color hp full"] or Color3.fromRGB(0,255,0)
-    local hpColor = lowColor:Lerp(fullColor, perc)
-
-    -- позиція HP BAR рівно по лівій стороні твого боксу
-    local barX = xPos - 5
-    local barY = yPos
-
-    -- outline
-    esp.HealthBarOutline.Size = Vector2.new(3, boxHeight)
-    esp.HealthBarOutline.Position = Vector2.new(barX - 1, barY - 1)
-    esp.HealthBarOutline.Color = Color3.new(0,0,0)
-    esp.HealthBarOutline.Thickness = 1
-    esp.HealthBarOutline.Filled = false
-    esp.HealthBarOutline.Visible = true
-
-    -- fill
-    local fillHeight = math.floor(boxHeight * perc)
-
-    esp.HealthBar.Size = Vector2.new(1, fillHeight)
-    esp.HealthBar.Position = Vector2.new(barX, barY + (boxHeight - fillHeight))
-    esp.HealthBar.Color = hpColor
-    esp.HealthBar.Filled = true
-    esp.HealthBar.Visible = true
-
-    -- % текст
-    if numberEnabled then
-        esp.HealthPercentText.Text = tostring(math.floor(perc * 100)) .. "%"
-        esp.HealthPercentText.Color = hpColor
-        esp.HealthPercentText.Position = Vector2.new(barX - 18, barY + (boxHeight - fillHeight) - 5)
-        esp.HealthPercentText.Visible = true
-    else
-        esp.HealthPercentText.Visible = false
-    end
-
-else
-    esp.HealthBar.Visible = false
-    esp.HealthBarOutline.Visible = false
-    esp.HealthPercentText.Visible = false
-end
-
--- Name
-local nameColor = flags["color name"] or Color3.new(1, 1, 1)
-
-if flags["box name"] then
-    esp.NameText.Text = settings.useDisplayName and player.DisplayName or player.Name
-    esp.NameText.Position = Vector2.new(pos.X, yPos - 20)
-    esp.NameText.Color = nameColor
-    esp.NameText.Visible = true
-else
-    esp.NameText.Visible = false
-end
-
+            
+            -- Health bar
+            if flags["box bar"] then
+                local hp = hum.Health
+                local maxhp = hum.MaxHealth
+                local perc = math.clamp(hp / maxhp, 0, 1)
+                local lowColor = flags["color hp low"] or Color3.fromRGB(255, 0, 0)
+                local fullColor = flags["color hp full"] or Color3.fromRGB(0, 255, 0)
+                local hpColor = lowColor:Lerp(fullColor, perc)
+                
+                -- Налаштування HP бару
+                local barWidth = 2
+                local barOffset = 6
+                local barX = xPos - barOffset
+                local barY = yPos
+                
+                -- Outline
+                local outlineWidth = barWidth + 2
+                local outlineHeight = boxHeight + 2
+                
+                esp.HealthBarOutline.Size = Vector2.new(outlineWidth, outlineHeight)
+                esp.HealthBarOutline.Position = Vector2.new(barX - 1, barY - 1)
+                esp.HealthBarOutline.Color = Color3.new(0, 0, 0)
+                esp.HealthBarOutline.Visible = true
+                
+                -- Заповнений HP бар
+                local fillHeight = math.floor(boxHeight * perc)
+                if fillHeight < 1 then fillHeight = 1 end
+                
+                esp.HealthBar.Size = Vector2.new(barWidth, fillHeight)
+                esp.HealthBar.Position = Vector2.new(barX, barY + (boxHeight - fillHeight))
+                esp.HealthBar.Color = hpColor
+                esp.HealthBar.Visible = true
+                
+                -- Текст відсотків здоров'я
+                if flags["box number hear"] then
+                    esp.HealthPercentText.Text = tostring(math.floor(perc * 100)) .. "%"
+                    esp.HealthPercentText.Color = hpColor
+                    esp.HealthPercentText.Position = Vector2.new(barX - 18, barY + (boxHeight - fillHeight) - 5)
+                    esp.HealthPercentText.Visible = true
+                else
+                    esp.HealthPercentText.Visible = false
+                end
+            else
+                esp.HealthBar.Visible = false
+                esp.HealthBarOutline.Visible = false
+                esp.HealthPercentText.Visible = false
+            end
+            
+            -- Name
+            if flags["box name"] then
+                local nameColor = flags["color name"] or Color3.new(1, 1, 1)
+                esp.NameText.Text = settings.useDisplayName and player.DisplayName or player.Name
+                esp.NameText.Position = Vector2.new(pos.X, yPos - 20)
+                esp.NameText.Color = nameColor
+                esp.NameText.Visible = true
+            else
+                esp.NameText.Visible = false
+            end
+            
             -- Distance
             if flags["box discr"] then
-                local distText = settings.metric == "Meters" and string.format("%.0fm",distance) or string.format("%.0fs",distance)
+                local distText = settings.metric == "Meters" and string.format("%.0fm", distance) or string.format("%.0fs", distance)
                 esp.DistanceText.Text = distText
-                esp.DistanceText.Position = Vector2.new(pos.X, yPos+boxHeight+5)
+                esp.DistanceText.Position = Vector2.new(pos.X, yPos + boxHeight + 5)
                 esp.DistanceText.Color = discrColor
                 esp.DistanceText.Visible = true
             else
                 esp.DistanceText.Visible = false
             end
-
+            
             -- Equipped Item
             if flags["box item"] then
                 local itemName = "Hands"
                 if char:FindFirstChild("Equipped") then
                     local item = char.Equipped:FindFirstChildOfClass("Model")
-                    if item then itemName = item.Name end
+                    if item then 
+                        itemName = item.Name 
+                    end
                 end
-                esp.ItemText.Text = "["..itemName.."]"
-                esp.ItemText.Position = Vector2.new(pos.X, yPos+boxHeight+20)
+                esp.ItemText.Text = "[" .. itemName .. "]"
+                esp.ItemText.Position = Vector2.new(pos.X, yPos + boxHeight + 20)
                 esp.ItemText.Color = itemColor
                 esp.ItemText.Visible = true
             else
                 esp.ItemText.Visible = false
             end
-
+            
         else
+            -- Hide all ESP elements if player is dead or not valid
             for _, v in pairs(esp) do
                 if typeof(v) == "table" then
-                    for _, l in ipairs(v) do l.Visible = false end
+                    if v.SegmentObjects then
+                        for _, segment in ipairs(v.SegmentObjects) do
+                            segment.Visible = false
+                        end
+                    else
+                        for _, l in ipairs(v) do 
+                            l.Visible = false 
+                        end
+                    end
                 else
                     v.Visible = false
                 end
