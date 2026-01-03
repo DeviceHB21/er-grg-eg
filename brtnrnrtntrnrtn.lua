@@ -48,11 +48,7 @@ task.spawn(function()
     }
 
     local antiAimFlags = {enabled = false, spinSpeed = 5, permaSpin = false}
-
-    --------------------------------------------------------------------
-    -- 🦶 MOVEMENT
-    --------------------------------------------------------------------
-
+		 
     MovementBox:AddToggle('WalkToggle', {
         Text = 'Walking Speed',
         Default = false,
@@ -90,10 +86,7 @@ task.spawn(function()
             movementFlags.runningSpeed = Value
         end
     })
-
-    --------------------------------------------------------------------
-    -- 💀 CHARACTER OPTIONS
-    --------------------------------------------------------------------
+		
     local CharBox = Tabs.Misc:AddLeftGroupbox('Character')
 
     CharBox:AddToggle('NoSprint_Toggle', {
@@ -158,9 +151,6 @@ task.spawn(function()
         end
     })
 
-    --------------------------------------------------------------------
-    -- 🌀 ANTI AIM
-    --------------------------------------------------------------------
     local AntiAimBox = Tabs.Misc:AddRightGroupbox('Anti Aim')
 
     AntiAimBox:AddToggle('AntiAim_Toggle', {
@@ -190,9 +180,6 @@ task.spawn(function()
         end
     })
 
-    --------------------------------------------------------------------
-    -- 🎮 INPUT HANDLING
-    --------------------------------------------------------------------
     UserInputService.InputBegan:Connect(function(Input, gpe)
         if gpe then return end
         if Input.KeyCode == Enum.KeyCode.LeftShift then
@@ -212,42 +199,34 @@ task.spawn(function()
         end
     end)
 
-    --------------------------------------------------------------------
-    -- 🏃‍♂️ MOVEMENT LOOP
-    --------------------------------------------------------------------
     RunService.Heartbeat:Connect(function()
         local char = LocalPlayer.Character
         if not char then return end
         local hum = char:FindFirstChildOfClass("Humanoid")
         local hrp = char:FindFirstChild("HumanoidRootPart")
         if not hum or not hrp then return end
-
-        -- Walk / Run
+				
         if movementFlags.runEnabled and movementFlags.isRunning then
             hum.WalkSpeed = movementFlags.runningSpeed
         elseif movementFlags.walkEnabled then
             hum.WalkSpeed = movementFlags.walkingSpeed
         end
 
-        -- No Fall
         if movementFlags.noFallEnabled then
             local vel = hrp.Velocity
             if vel.Y < -movementFlags.noFallSpeed then
                 hrp.Velocity = Vector3.new(vel.X, -movementFlags.noFallSpeed, vel.Z)
             end
-        end
-
-        -- No Ragdoll
+		end
+				
         if movementFlags.noRagdollEnabled and hum:GetState() == Enum.HumanoidStateType.Ragdoll then
             hum:ChangeState(Enum.HumanoidStateType.GettingUp)
         end
 
-        -- No Sprint Penalty
         if movementFlags.noSprintPenalty then
             hum.WalkSpeed = math.max(hum.WalkSpeed, movementFlags.runningSpeed)
         end
 
-        -- Anti Debuff
         if movementFlags.antiDebuffEnabled then
             for _, child in ipairs(hum:GetChildren()) do
                 if (child:IsA("BoolValue") or child:IsA("NumberValue")) and
@@ -258,9 +237,6 @@ task.spawn(function()
         end
     end)
 
-    --------------------------------------------------------------------
-    -- 💫 ANTI AIM LOOP
-    --------------------------------------------------------------------
     local angle = 0
     RunService.RenderStepped:Connect(function()
         local char = LocalPlayer.Character
@@ -278,7 +254,6 @@ task.spawn(function()
     local Players = game:GetService("Players")
     local workspace = game:GetService("Workspace")
 
-    -- 🔍 Автопошук папки зомбі
     local zombiesFolder
     for _, obj in ipairs(workspace:GetChildren()) do
         if obj:IsA("Folder") and obj.Name:lower():find("zombie") then
@@ -293,9 +268,6 @@ task.spawn(function()
         return
     end
 
-    --------------------------------------------------------------------
-    -- 🧊 FREEZE SYSTEM
-    --------------------------------------------------------------------
     local function freezeZombie(zombie)
         local humanoid = zombie:FindFirstChildOfClass("Humanoid")
         if humanoid then
@@ -341,9 +313,6 @@ task.spawn(function()
         end
     })
 
-    --------------------------------------------------------------------
-    -- 🌀 ZOMBIE CIRCLE SYSTEM
-    --------------------------------------------------------------------
     local zombieCircleEnabled = false
     local zombieCircleDistance = 10
     local zombieCircleSpeed = 5
@@ -421,17 +390,15 @@ local function FPSRate(cap)
         setfpslimit(cap)
     end
 end
-
--- 🔥 UNLOCK FPS TOGGLE
 Game:AddToggle("UnlockFPS", {
     Text = "Unlock FPS",
     Default = false,
 
     Callback = function(state)
         if state then
-            FPSRate(999)   -- 🔓 Включено — максимум FPS
+            FPSRate(999)  
         else
-            FPSRate(60)    -- 🔒 Вимкнено — стандартний FPS
+            FPSRate(60) 
         end
     end
 })
@@ -443,9 +410,6 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local Framework = require(ReplicatedFirst:WaitForChild("Framework"))
 Framework:WaitForLoaded()
 
---------------------------------------------------------------------
--- 📦 Bring Loot To Inventory
---------------------------------------------------------------------
 Misc:AddButton({
     Text = "Bring Loot To Inventory",
     DoubleClick = false,
@@ -462,9 +426,6 @@ Misc:AddButton({
     end
 })
 
---------------------------------------------------------------------
--- 💰 Bring Loot To Ground
---------------------------------------------------------------------
 Misc:AddButton({
     Text = "Bring Loot To Ground",
     DoubleClick = false,
@@ -482,9 +443,6 @@ Misc:AddButton({
     end
 })
 
---------------------------------------------------------------------
--- 🗃️ Open All Containers
---------------------------------------------------------------------
 Misc:AddButton({
     Text = "Open All Containers",
     DoubleClick = false,
@@ -512,9 +470,7 @@ task.spawn(function()
     local Wrapper = getupvalue(getupvalue(Framework.require, 1), 1)
     local Bullets = Wrapper.Libraries.Bullets
 
-    -- ⚙️ SETTINGS
     local Settings = {
-        -- 🎯 AIMBOT
         AimbotEnabled = false,
         AimbotHoldKey = Enum.UserInputType.MouseButton2,
         AimbotSmoothing = 0.5,
@@ -522,24 +478,20 @@ task.spawn(function()
         AimbotTargetHitbox = "Head",
         AimbotDistanceCheck = false,
         AimbotMaxDistance = 1500,
-        -- 🔇 SILENT AIM
         SilentEnabled = false,
         SilentHitChance = 100,
         SilentMaxDistance = 2000,
         SilentTargetType = "Closest To Mouse",
         SilentTargetHitbox = "Head",
-        -- 🛡️ GUN MODS
         NoSpreadEnabled = false,
-        SpreadScale = 0,      -- 0 = повний no spread
+        SpreadScale = 0,     
         NoRecoilEnabled = false,
-        RecoilScale = 0.1,    -- 0 = повний no recoil, 1 = оригінал
-        -- ⚪ SNAP LINE
+        RecoilScale = 0.1,  
         SnapLine = false,
         SnapLineColor = Color3.fromRGB(255,255,255),
         SnapLineThickness = 2,
         SnapLineOutline = false,
         SnapLineOutlineTransparency = 0.9,
-        -- 🟢 FOV
         FOVEnabled = true,
         FOVColor = Color3.fromRGB(0,255,0),
         FOVRadius = 150,
@@ -549,14 +501,12 @@ task.spawn(function()
         FOVOutline = true
     }
 
-    -- 🎨 DRAWING OBJECTS
     local FOVCircle = Drawing.new("Circle")
     local FOVOutline = Drawing.new("Circle")
     local SnapLine = Drawing.new("Line")
     local SnapOutline = Drawing.new("Line")
     local Holding = false
 
-    -- 🌀 UPDATE FOV
     local function UpdateFOV()
         if not Settings.FOVEnabled then
             FOVCircle.Visible = false
@@ -588,8 +538,7 @@ task.spawn(function()
         FOVCircle.Filled = Settings.FOVFill
         FOVCircle.Transparency = 1
     end
-
-    -- 🔍 ПОШУК ЦІЛІ
+		
     local function GetClosestPlayer(targetType, hitbox, maxDistance)
         local closest, shortest = nil, math.huge
         local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
@@ -614,14 +563,12 @@ task.spawn(function()
         return closest
     end
 
-    -- 🎯 AIMBOT MOVE
     local function MoveMouseTo(targetPos)
         local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
         local delta = (Vector2.new(targetPos.X, targetPos.Y) - center) * Settings.AimbotSmoothing
         if mousemoverel then mousemoverel(delta.X, delta.Y) end
     end
 
-    -- 🛡️ GUN MODS: No Spread & No Recoil (setupvalue ДО hook!)
     local GetSpreadAngle = getupvalue(Bullets.Fire, 1)
     local GetFireImpulse = getupvalue(Bullets.Fire, 6)
 
@@ -652,7 +599,6 @@ task.spawn(function()
         return unpack(impulse)
     end)
 
-    -- 💥 SILENT AIM HOOK (після setupvalue!)
     local oldFire
     oldFire = hookfunction(Bullets.Fire, function(w, c, _, g, origin, dir, ...)
         if not Settings.SilentEnabled then
@@ -668,7 +614,6 @@ task.spawn(function()
         return oldFire(w, c, _, g, origin, dir, ...)
     end)
 
-    -- 🖱️ INPUT
     UIS.InputBegan:Connect(function(input)
         if input.UserInputType == Settings.AimbotHoldKey then Holding = true end
     end)
@@ -676,7 +621,6 @@ task.spawn(function()
         if input.UserInputType == Settings.AimbotHoldKey then Holding = false end
     end)
 
-    -- 🎥 MAIN LOOP
     RunService.RenderStepped:Connect(function()
         UpdateFOV()
         local target = GetClosestPlayer(Settings.AimbotTargetType, Settings.AimbotTargetHitbox, Settings.AimbotMaxDistance)
@@ -720,7 +664,6 @@ task.spawn(function()
         end
     end)
 
-    -- ================= 🧩 UI =================
     local Box = Tabs.Combat:AddLeftGroupbox('Aim Bot')
     Box:AddToggle('Aimbot_Toggle', {Text = 'Enable Aimbot', Default = false, Callback = function(v) Settings.AimbotEnabled = v end})
     Box:AddToggle('DistanceCheck_Toggle', {Text = 'Aimbot Distance Check', Default = false, Callback = function(v) Settings.AimbotDistanceCheck = v end})
@@ -747,7 +690,6 @@ task.spawn(function()
     SnapBox:AddToggle('SnapOutline_Toggle', {Text = 'Snap Line Outline', Default = false, Callback = function(v) Settings.SnapLineOutline = v end})
     SnapBox:AddSlider('SnapThickness_Slider', {Text = 'Snap Line Thickness', Min = 1, Max = 5, Default = 2, Rounding = 1, Callback = function(v) Settings.SnapLineThickness = v end})
 
-        -- No Spread & No Recoil UI
         local GunModsBox = Tabs.Combat:AddRightGroupbox('Gun Mods')
 
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -766,13 +708,8 @@ task.spawn(function()
     repeat task.wait() until Firearm
 
     local AnimatedReload = getupvalue(Firearm, 7)
-    local InstantReloadEnabled = false -- 🔹 Локальний флаг
+    local InstantReloadEnabled = false 
 
-    --------------------------------------------------------------------
-    -- 🧩 FLUENT RENEWED UI - GUN MODS
-    --------------------------------------------------------------------
-
-    -- ⚡ INSTANT RELOAD
     GunModsBox:AddToggle('InstantReload_Toggle', {
         Text = 'Instant Reload',
         Default = false,
@@ -782,7 +719,6 @@ task.spawn(function()
         end
     })
 
-    -- 🔁 Перехоплення функції Reload
     setupvalue(Firearm, 7, function(...)
         if InstantReloadEnabled then
             local Args = {...}
@@ -795,9 +731,6 @@ task.spawn(function()
         return AnimatedReload(...)
     end)
 
-    --------------------------------------------------------------------
-    -- 🔓 UNLOCK FIREMODES
-    --------------------------------------------------------------------
     GunModsBox:AddToggle('UnlockFiremodes_Toggle', {
         Text = 'Unlock Firemodes',
         Default = false,
@@ -846,14 +779,12 @@ task.spawn(function()
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
 
-    -- 🧩 Змінні
     local ExpansionSize = Vector3.new(10, 10, 10)
     local Transparency = 0.5
     local OriginalSizes = {}
     local HeadExpandEnabled = false
     local Connections = {}
 
-    -- 🔹 Розширює голову
     local function expandHead(char)
         if char.Parent == LocalPlayer then return end
         local head = char:FindFirstChild("Head")
@@ -867,7 +798,6 @@ task.spawn(function()
         end
     end
 
-    -- 🔹 Для нового гравця
     local function onPlayer(plr)
         if plr == LocalPlayer then return end
         if plr.Character then expandHead(plr.Character) end
@@ -877,7 +807,6 @@ task.spawn(function()
         end)
     end
 
-    -- 🔹 Увімкнення
     local function enableExpander()
         for _, plr in ipairs(Players:GetPlayers()) do
             onPlayer(plr)
@@ -885,7 +814,6 @@ task.spawn(function()
         Connections["PlayerAdded"] = Players.PlayerAdded:Connect(onPlayer)
     end
 
-    -- 🔹 Вимкнення
     local function disableExpander()
         if Connections["PlayerAdded"] then
             Connections["PlayerAdded"]:Disconnect()
@@ -900,12 +828,8 @@ task.spawn(function()
         end
     end
 
-    --------------------------------------------------------------------
-    -- 🧠 FLUENT RENEWED UI (HEAD EXPANDER)
-    --------------------------------------------------------------------
 local HeadExpander = Tabs.Combat:AddRightGroupbox('Head Expander')
 
-    -- 🟢 Toggle
     HeadExpander:AddToggle('HeadExpand_Toggle', {
         Text = 'Enable Head Expander',
         Default = false,
@@ -918,8 +842,7 @@ local HeadExpander = Tabs.Combat:AddRightGroupbox('Head Expander')
             end
         end
     })
-
-    -- 🎚️ Slider: Head Size
+		
     HeadExpander:AddSlider('HeadSize_Slider', {
         Text = 'Head Size',
         Min = 2,
@@ -938,7 +861,6 @@ local HeadExpander = Tabs.Combat:AddRightGroupbox('Head Expander')
         end
     })
 
-    -- 🎚️ Slider: Transparency
     HeadExpander:AddSlider('HeadTransparency_Slider', {
         Text = 'Head Transparency',
         Min = 0,
@@ -956,10 +878,7 @@ local HeadExpander = Tabs.Combat:AddRightGroupbox('Head Expander')
             end
         end
     })
-
-    --------------------------------------------------------------------
-    -- 🛡️ Маскування розміру (античит)
-    --------------------------------------------------------------------
+		
     local mt = getrawmetatable(game)
     setreadonly(mt, false)
 
@@ -995,17 +914,15 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- 🧠 FLAGS & SETTINGS
 local flags = {}
 local settings = {
     maxHPVisibility = 100,
-    boxType = "Boxes", -- Boxes / Corners
-    boxRender = "Dynamic", -- Dynamic / Static
-    metric = "Meters", -- Meters / Studs
+    boxType = "Boxes", 
+    boxRender = "Dynamic",
+    metric = "Meters",
     useDisplayName = true
 }
 
--- 🔰 ESP ГОЛОВНІ ПЕРЕМИКАЧІ
 LeftGroupBox:AddToggle('enable esp', {
     Text = 'Enable ESP',
     Default = false,
@@ -1029,7 +946,6 @@ LeftGroupBox:AddToggle('box', {
     end
 })
 
--- 🟦 Fill Box
 LeftGroupBox:AddToggle('fill box', {
     Text = 'Fill Box',
     Default = false,
@@ -1045,7 +961,6 @@ LeftGroupBox:AddToggle('fill box', {
     end
 })
 
--- 🦴 Skeleton ESP
 LeftGroupBox:AddToggle('skeleton', {
     Text = 'Skeleton',
     Default = false,
@@ -1061,7 +976,6 @@ LeftGroupBox:AddToggle('skeleton', {
     end
 })
 
--- ❤️ Health Bar
 LeftGroupBox:AddToggle('box bar', {
     Text = 'Health Bar',
     Default = false,
@@ -1092,7 +1006,6 @@ LeftGroupBox:AddToggle('box number hear', {
     end
 })
 
--- 🧍‍♂️ Name (з власним кольором)
 LeftGroupBox:AddToggle('box name', {
     Text = 'Show Name',
     Default = false,
@@ -1108,7 +1021,6 @@ LeftGroupBox:AddToggle('box name', {
     end
 })
 
--- 📏 Distance
 LeftGroupBox:AddToggle('box discr', {
     Text = 'Distance',
     Default = false,
@@ -1124,7 +1036,6 @@ LeftGroupBox:AddToggle('box discr', {
     end
 })
 
--- 🔫 Equipped Item
 LeftGroupBox:AddToggle('box item', {
     Text = 'Equipped Item',
     Default = false,
@@ -1140,7 +1051,6 @@ LeftGroupBox:AddToggle('box item', {
     end
 })
 
--- 📍 Tracer
 LeftGroupBox:AddToggle('tbox', {
     Text = 'Tracer',
     Default = false,
@@ -1156,7 +1066,6 @@ LeftGroupBox:AddToggle('tbox', {
     end
 })
 
--- 🎚️ Distance Check Slider
 LeftGroupBox:AddSlider('dis chek', {
     Text = "Distance Check",
     Min = 1000,
@@ -1178,7 +1087,6 @@ LeftGroupBox:AddButton({
     end
 })
 
--- ⚙️ ESP Settings Groupbox
 local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Esp Settings')
 LeftGroupBox:AddSlider('max hp visibility', {
     Text = "Max HP Visibility",
@@ -1226,11 +1134,9 @@ LeftGroupBox:AddToggle('use display name', {
     end
 })
 
--- === CREATE ESP OBJECT ===
 local function CreateESP()
     local esp = {}
     
-    -- Box
     esp.BoxOutline = Drawing.new("Square")
     esp.BoxOutline.Visible = false
     esp.BoxOutline.Color = Color3.new(0,0,0)
@@ -1243,7 +1149,6 @@ local function CreateESP()
     esp.Box.Thickness = 1
     esp.Box.Filled = false
     
-    -- Fill Box
     esp.FillBox = Drawing.new("Square")
     esp.FillBox.Visible = false
     esp.FillBox.Color = Color3.new(1,1,1)
@@ -1251,12 +1156,10 @@ local function CreateESP()
     esp.FillBox.Filled = true
     esp.FillBox.Transparency = 0.3
     
-    -- Gradient Fill Box (нове!)
     esp.GradientFillBox = {}
-    esp.GradientFillBox.Segments = 10 -- Кількість сегментів для градієнта
+    esp.GradientFillBox.Segments = 10
     esp.GradientFillBox.SegmentObjects = {}
     
-    -- Створюємо сегменти для градієнта
     for i = 1, esp.GradientFillBox.Segments do
         local segment = Drawing.new("Square")
         segment.Visible = false
@@ -1265,7 +1168,6 @@ local function CreateESP()
         table.insert(esp.GradientFillBox.SegmentObjects, segment)
     end
     
-    -- Corner Lines
     esp.CornerLines = {}
     for i = 1, 8 do
         local line = Drawing.new("Line")
@@ -1273,7 +1175,6 @@ local function CreateESP()
         table.insert(esp.CornerLines, line)
     end
     
-    -- Skeleton Lines
     esp.SkeletonLines = {}
     for i = 1, 20 do
         local line = Drawing.new("Line")
@@ -1281,7 +1182,6 @@ local function CreateESP()
         table.insert(esp.SkeletonLines, line)
     end
     
-    -- Health Bar
     esp.HealthBarOutline = Drawing.new("Square")
     esp.HealthBarOutline.Visible = false
     esp.HealthBarOutline.Color = Color3.new(0,0,0)
@@ -1293,7 +1193,6 @@ local function CreateESP()
     esp.HealthBar.Thickness = 1
     esp.HealthBar.Filled = true
     
-    -- Text Elements
     esp.NameText = Drawing.new("Text")
     esp.NameText.Visible = false
     esp.NameText.Outline = true
@@ -1322,7 +1221,6 @@ local function CreateESP()
     esp.ItemText.Size = 14
     esp.ItemText.Font = 1
     
-    -- Tracer
     esp.TracerLine = Drawing.new("Line")
     esp.TracerLine.Visible = false
     esp.TracerLine.Thickness = 1
@@ -1330,18 +1228,17 @@ local function CreateESP()
     return esp
 end
 
--- === ESP HANDLERS ===
 local ESPTable = {}
 
 local function RemoveESP(player)
     if ESPTable[player] then
         for _, v in pairs(ESPTable[player]) do
             if typeof(v) == "table" then
-                if v.SegmentObjects then -- Для градієнта
+                if v.SegmentObjects then 
                     for _, segment in ipairs(v.SegmentObjects) do
                         pcall(segment.Remove, segment)
                     end
-                else -- Для інших таблиць
+                else 
                     for _, line in ipairs(v) do 
                         pcall(line.Remove, line) 
                     end
@@ -1367,47 +1264,39 @@ end
 Players.PlayerAdded:Connect(AddESP)
 Players.PlayerRemoving:Connect(RemoveESP)
 
--- === SKELETON BONE CONNECTIONS ===
 local BONE_CONNECTIONS = {
-    -- Torso connections
     {"HumanoidRootPart", "LowerTorso"},
     {"LowerTorso", "UpperTorso"},
     
-    -- Left Arm
     {"UpperTorso", "LeftUpperArm"},
     {"LeftUpperArm", "LeftLowerArm"},
     {"LeftLowerArm", "LeftHand"},
     
-    -- Right Arm
     {"UpperTorso", "RightUpperArm"},
     {"RightUpperArm", "RightLowerArm"},
     {"RightLowerArm", "RightHand"},
     
-    -- Left Leg
     {"LowerTorso", "LeftUpperLeg"},
     {"LeftUpperLeg", "LeftLowerLeg"},
     {"LeftLowerLeg", "LeftFoot"},
     
-    -- Right Leg
     {"LowerTorso", "RightUpperLeg"},
     {"RightUpperLeg", "RightLowerLeg"},
     {"RightLowerLeg", "RightFoot"},
     
-    -- Head
     {"UpperTorso", "Head"},
 }
 
--- === MAIN RENDER LOOP ===
 RunService.RenderStepped:Connect(function()
     if not flags["enable esp"] then
         for _, esp in pairs(ESPTable) do
             for _, v in pairs(esp) do
                 if typeof(v) == "table" then
-                    if v.SegmentObjects then -- Для градієнта
+                    if v.SegmentObjects then 
                         for _, segment in ipairs(v.SegmentObjects) do
                             segment.Visible = false
                         end
-                    else -- Для інших таблиць
+                    else 
                         for _, l in ipairs(v) do 
                             l.Visible = false 
                         end
@@ -1461,7 +1350,6 @@ RunService.RenderStepped:Connect(function()
             
             local xPos, yPos = pos.X - boxWidth/2, pos.Y - boxHeight/2
             
-            -- Get colors
             local boxColor = flags["color box"] or Color3.new(1,1,1)
             local fillColor = flags["color fill box"] or Color3.fromRGB(255, 255, 255)
             local skeletonColor = flags["color skeleton"] or Color3.new(1,1,1)
@@ -1469,7 +1357,6 @@ RunService.RenderStepped:Connect(function()
             local discrColor = flags["distance"] or Color3.new(1,1,1)
             local itemColor = flags["color item"] or Color3.new(1,1,1)
             
-            -- Звичайний Fill Box
             if flags["fill box"] then
                 esp.FillBox.Size = Vector2.new(boxWidth, boxHeight)
                 esp.FillBox.Position = Vector2.new(xPos, yPos)
@@ -1480,7 +1367,6 @@ RunService.RenderStepped:Connect(function()
                 esp.FillBox.Visible = false
             end
             
-            -- Gradient Fill Box (нове!)
             if flags["gradient_fill_box"] then
                 local segments = esp.GradientFillBox.Segments
                 local segmentHeight = boxHeight / segments
@@ -1497,14 +1383,11 @@ RunService.RenderStepped:Connect(function()
                         esp.GradientFillBox.SegmentObjects[i] = segment
                     end
                     
-                    -- Розраховуємо інтерполяцію кольору
                     local t = (i - 1) / (segments - 1)
                     local color = gradientTop:Lerp(gradientBottom, t)
                     
-                    -- Розраховуємо прозорість (злегка збільшуємо донизу)
                     local transparency = baseTransparency + (t * 0.3)
                     
-                    -- Розраховуємо позицію сегмента
                     local segmentY = yPos + (i - 1) * segmentHeight
                     
                     segment.Size = Vector2.new(boxWidth, math.ceil(segmentHeight))
@@ -1514,19 +1397,15 @@ RunService.RenderStepped:Connect(function()
                     segment.Visible = true
                 end
                 
-                -- Ховаємо звичайний fill box
                 esp.FillBox.Visible = false
             else
-                -- Ховаємо всі сегменти градієнта
                 for _, segment in ipairs(esp.GradientFillBox.SegmentObjects) do
                     segment.Visible = false
                 end
             end
             
-            -- Box Type handling
             if flags["box"] then
                 if settings.boxType == "Boxes" then
-                    -- Main Box
                     esp.Box.Size = Vector2.new(boxWidth, boxHeight)
                     esp.Box.Position = Vector2.new(xPos, yPos)
                     esp.Box.Color = boxColor
@@ -1536,30 +1415,27 @@ RunService.RenderStepped:Connect(function()
                     esp.BoxOutline.Position = esp.Box.Position
                     esp.BoxOutline.Visible = true
                     
-                    -- Hide corner lines
                     for _, l in ipairs(esp.CornerLines) do 
                         l.Visible = false 
                     end
                     
                 elseif settings.boxType == "Corners" then
-                    -- Hide main box and fill box
                     esp.Box.Visible = false
                     esp.BoxOutline.Visible = false
                     
-                    -- Draw corner lines
                     local cornerLen = boxWidth * 0.25
                     local lines = esp.CornerLines
                     local cx, cy, w, h = xPos, yPos, boxWidth, boxHeight
                     
                     local corners = {
-                        {cx, cy, cx+cornerLen, cy},               -- Top Left -> Right
-                        {cx, cy, cx, cy+cornerLen},               -- Top Left -> Down
-                        {cx+w, cy, cx+w-cornerLen, cy},           -- Top Right -> Left
-                        {cx+w, cy, cx+w, cy+cornerLen},           -- Top Right -> Down
-                        {cx, cy+h, cx+cornerLen, cy+h},           -- Bottom Left -> Right
-                        {cx, cy+h, cx, cy+h-cornerLen},           -- Bottom Left -> Up
-                        {cx+w, cy+h, cx+w-cornerLen, cy+h},       -- Bottom Right -> Left
-                        {cx+w, cy+h, cx+w, cy+h-cornerLen}        -- Bottom Right -> Up
+                        {cx, cy, cx+cornerLen, cy},           
+                        {cx, cy, cx, cy+cornerLen},             
+                        {cx+w, cy, cx+w-cornerLen, cy},          
+                        {cx+w, cy, cx+w, cy+cornerLen},          
+                        {cx, cy+h, cx+cornerLen, cy+h},           
+                        {cx, cy+h, cx, cy+h-cornerLen},          
+                        {cx+w, cy+h, cx+w-cornerLen, cy+h},      
+                        {cx+w, cy+h, cx+w, cy+h-cornerLen}        
                     }
                     
                     for i, c in ipairs(corners) do
@@ -1580,7 +1456,6 @@ RunService.RenderStepped:Connect(function()
                 end
             end
             
-            -- Skeleton ESP
             if flags["skeleton"] then
                 local boneLines = esp.SkeletonLines
                 local boneIndex = 1
@@ -1611,7 +1486,6 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
                 
-                -- Hide unused skeleton lines
                 for i = boneIndex, #boneLines do
                     if boneLines[i] then
                         boneLines[i].Visible = false
@@ -1623,7 +1497,6 @@ RunService.RenderStepped:Connect(function()
                 end
             end
             
-            -- Tracer
             if flags["tbox"] then
                 esp.TracerLine.From = screenCenter
                 esp.TracerLine.To = Vector2.new(pos.X, pos.Y)
@@ -1633,7 +1506,6 @@ RunService.RenderStepped:Connect(function()
                 esp.TracerLine.Visible = false
             end
             
-            -- Health bar
             if flags["box bar"] then
                 local hp = hum.Health
                 local maxhp = hum.MaxHealth
@@ -1642,13 +1514,11 @@ RunService.RenderStepped:Connect(function()
                 local fullColor = flags["color hp full"] or Color3.fromRGB(0, 255, 0)
                 local hpColor = lowColor:Lerp(fullColor, perc)
                 
-                -- Налаштування HP бару
                 local barWidth = 2
                 local barOffset = 6
                 local barX = xPos - barOffset
                 local barY = yPos
                 
-                -- Outline
                 local outlineWidth = barWidth + 2
                 local outlineHeight = boxHeight + 2
                 
@@ -1657,7 +1527,6 @@ RunService.RenderStepped:Connect(function()
                 esp.HealthBarOutline.Color = Color3.new(0, 0, 0)
                 esp.HealthBarOutline.Visible = true
                 
-                -- Заповнений HP бар
                 local fillHeight = math.floor(boxHeight * perc)
                 if fillHeight < 1 then fillHeight = 1 end
                 
@@ -1666,7 +1535,6 @@ RunService.RenderStepped:Connect(function()
                 esp.HealthBar.Color = hpColor
                 esp.HealthBar.Visible = true
                 
-                -- Текст відсотків здоров'я
                 if flags["box number hear"] then
                     esp.HealthPercentText.Text = tostring(math.floor(perc * 100)) .. "%"
                     esp.HealthPercentText.Color = hpColor
@@ -1681,7 +1549,6 @@ RunService.RenderStepped:Connect(function()
                 esp.HealthPercentText.Visible = false
             end
             
-            -- Name
             if flags["box name"] then
                 local nameColor = flags["color name"] or Color3.new(1, 1, 1)
                 esp.NameText.Text = settings.useDisplayName and player.DisplayName or player.Name
@@ -1692,7 +1559,6 @@ RunService.RenderStepped:Connect(function()
                 esp.NameText.Visible = false
             end
             
-            -- Distance
             if flags["box discr"] then
                 local distText = settings.metric == "Meters" and string.format("%.0fm", distance) or string.format("%.0fs", distance)
                 esp.DistanceText.Text = distText
@@ -1703,7 +1569,6 @@ RunService.RenderStepped:Connect(function()
                 esp.DistanceText.Visible = false
             end
             
-            -- Equipped Item
             if flags["box item"] then
                 local itemName = "Hands"
                 if char:FindFirstChild("Equipped") then
@@ -1721,7 +1586,6 @@ RunService.RenderStepped:Connect(function()
             end
             
         else
-            -- Hide all ESP elements if player is dead or not valid
             for _, v in pairs(esp) do
                 if typeof(v) == "table" then
                     if v.SegmentObjects then
@@ -1759,12 +1623,10 @@ local FillTransparencySlider = 10
 local OutlineTransparencySlider = 10
 local ChamsEnabled = false
 
--- 🔹 Переводимо значення слайдерів у прозорість (0–1)
 local function ToTransparency(val)
 	return math.clamp(val / 20, 0, 1)
 end
 
--- 🔹 Оновлення Highlight
 local function UpdateHighlight(h)
 	h.FillColor = FillColor
 	h.OutlineColor = OutlineColor
@@ -1772,7 +1634,6 @@ local function UpdateHighlight(h)
 	h.OutlineTransparency = ToTransparency(OutlineTransparencySlider)
 end
 
--- 🔹 Додаємо Highlight гравцю
 local function Highlight(plr)
 	if plr == lp then return end
 	if Storage:FindFirstChild(plr.Name) then
@@ -1797,7 +1658,6 @@ local function Highlight(plr)
 	connections[plr] = plr.CharacterAdded:Connect(ApplyToCharacter)
 end
 
--- 🔹 Обробка гравців
 Players.PlayerAdded:Connect(Highlight)
 for _, plr in ipairs(Players:GetPlayers()) do
 	Highlight(plr)
@@ -1813,7 +1673,6 @@ Players.PlayerRemoving:Connect(function(plr)
 	end
 end)
 
--- 🟣 Нові UI елементи
 LeftGroupBox:AddToggle('ChamsToggle', {
 	Text = 'Player Chams',
 	Tooltip = 'Підсвічування гравців через стіни',
@@ -1892,7 +1751,6 @@ local corpseDistanceColor = Color3.fromRGB(255, 255, 255)
 local fontSize = 11
 local fontType = Enum.Font.Code
 
--- 🧠 Допоміжні функції
 local function isIgnoredCorpse(model)
 	return model.Name:lower():find("infected") ~= nil
 end
@@ -1980,7 +1838,6 @@ local function updateCorpseESP()
 	end
 end
 
--- 🧩 Нові трупи автоматично
 corpsesFolder.ChildAdded:Connect(function(child)
 	if corpseESPEnabled and child:IsA("Model") and not isIgnoredCorpse(child) then
 		createHighlight(child)
@@ -1990,7 +1847,6 @@ corpsesFolder.ChildAdded:Connect(function(child)
 	end
 end)
 
--- 🔄 Централізоване оновлення
 RunService.RenderStepped:Connect(function()
 	if not corpseESPEnabled then return end
 	local camPos = Camera.CFrame.Position
@@ -2038,7 +1894,6 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- 🧱 Нові UI елементи (LeftGroupBox)
 LeftGroupBox:AddToggle('CorpseESP_Toggle', {
 	Text = 'Corpse ESP',
 	Default = false,
@@ -2123,15 +1978,12 @@ local fontSize = 12
 local fontType = Enum.Font.Code
 
 local espVehicles = {}
-
--- 🧹 Видалення ESP для машини
 local function removeESP(model)
 	local espGui = model:FindFirstChild("VehicleESP_GUI")
 	if espGui then espGui:Destroy() end
 	espVehicles[model] = nil
 end
 
--- 🏎️ Створення Billboard ESP
 local function createBillboard(model)
 	local primary = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
 	if not primary then return end
@@ -2184,7 +2036,6 @@ local function createBillboard(model)
 	}
 end
 
--- 🔁 Оновлення ESP
 local function updateVehicleESP()
 	for _, vehicle in pairs(vehiclesFolder:GetChildren()) do
 		if vehicle:IsA("Model") then
@@ -2197,7 +2048,6 @@ local function updateVehicleESP()
 	end
 end
 
--- 🚗 Нові машини
 vehiclesFolder.ChildAdded:Connect(function(child)
 	if vehicleESPEnabled and child:IsA("Model") then
 		if showNames or showDistance then
@@ -2206,7 +2056,6 @@ vehiclesFolder.ChildAdded:Connect(function(child)
 	end
 end)
 
--- 🎥 Центральне оновлення
 RunService.RenderStepped:Connect(function()
 	if not vehicleESPEnabled then return end
 	local camPos = Camera.CFrame.Position
@@ -2245,7 +2094,6 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- 🧱 Нові UI елементи (LeftGroupBox)
 LeftGroupBox:AddToggle('VehicleESP_Toggle', {
 	Text = 'Vehicle ESP',
 	Default = false,
@@ -2323,14 +2171,12 @@ local fontType = Enum.Font.Code
 
 local espZombies = {}
 
--- 🧹 Видалення ESP
 local function removeESP(model)
 	local espGui = model:FindFirstChild("ZombieESP_GUI")
 	if espGui then espGui:Destroy() end
 	espZombies[model] = nil
 end
 
--- 💀 Створення Billboard ESP
 local function createBillboard(model)
 	local primary = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
 	if not primary then return end
@@ -2383,7 +2229,6 @@ local function createBillboard(model)
 	}
 end
 
--- 🔁 Оновлення Zombie ESP
 local function updateZombieESP()
 	for _, zombie in pairs(zombiesFolder:GetChildren()) do
 		if zombie:IsA("Model") then
@@ -2396,7 +2241,6 @@ local function updateZombieESP()
 	end
 end
 
--- 🧟 Нові зомбі
 zombiesFolder.ChildAdded:Connect(function(child)
 	if zombieESPEnabled and child:IsA("Model") then
 		if showNames or showDistance then
@@ -2405,7 +2249,6 @@ zombiesFolder.ChildAdded:Connect(function(child)
 	end
 end)
 
--- 🎥 Оновлення RenderStepped
 RunService.RenderStepped:Connect(function()
 	if not zombieESPEnabled then return end
 	local camPos = Camera.CFrame.Position
@@ -2443,7 +2286,6 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- 🧱 Нові UI елементи (LeftGroupBox)
 LeftGroupBox:AddToggle('ZombieESP_Toggle', {
 	Text = 'Zombie ESP',
 	Default = false,
@@ -2507,7 +2349,6 @@ local RightGroupBox = Tabs.Visuals:AddRightGroupbox('Lighting')
 local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
 
--- 🟣 NO FOG
 local noFogConnection
 RightGroupBox:AddToggle('NoFog_Toggle', {
 	Text = 'No Fog',
@@ -2540,7 +2381,6 @@ RightGroupBox:AddToggle('NoFog_Toggle', {
 	end
 })
 
--- 🌑 NO SHADOWS
 RightGroupBox:AddToggle('NoShadows_Toggle', {
 	Text = 'No Shadows',
 	Default = false,
@@ -2549,7 +2389,6 @@ RightGroupBox:AddToggle('NoShadows_Toggle', {
 	end
 })
 
--- 🌅 CUSTOM AMBIENT
 local AmbientEnabled = false
 local AmbientColor = Color3.fromRGB(255, 255, 255)
 
@@ -2583,7 +2422,6 @@ RightGroupBox:AddToggle('CustomAmbient_Toggle', {
 	end
 })
 
--- ⚙️ CUSTOM TECHNOLOGY
 local TechnologyEnabled = false
 local SelectedTechnology = "Voxel"
 
@@ -2618,7 +2456,6 @@ RightGroupBox:AddDropdown('Technology_Mode', {
 	end
 })
 
--- 🌇 CUSTOM TIME
 local timeConnection
 local customTime = 12
 
@@ -2694,7 +2531,7 @@ CloudsModification:AddSlider('CloudsCover_Slider', {
 	Min = 0,
 	Max = 1,
 	Default = 0.5,
-	Rounding = 2, -- ✅ означає 2 знаки після коми
+	Rounding = 2, 
 	Callback = function(Value)
 		cloudCover = Value
 	end
@@ -2913,7 +2750,6 @@ function createBulletTracerBeam(origin, direct)
 	end)
 end
 
--- 💣 HOOK
 local replicated_first = game:GetService("ReplicatedFirst")
 local framework = require(replicated_first.Framework)
 local wrapper = getupvalue(getupvalue(framework.require, 1), 1)
@@ -2927,7 +2763,6 @@ old_fire = hookfunction(bullets.Fire, function(weapon_data, character_data, _, g
 	return old_fire(weapon_data, character_data, _, gun_data, origin, direction, ...)
 end)
 
--- 🧩 UI
 BuletTracer:AddToggle('BulletTracer_Toggle', {
 	Text = 'Bullet Tracer',
 	Default = false,
