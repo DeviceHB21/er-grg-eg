@@ -30,10 +30,6 @@ local RunService = game:GetService("RunService")
 
 local LP = Players.LocalPlayer
 
------------------------------------------------------------
---                   🔥  NOCLIP
------------------------------------------------------------
-
 local noclipEnabled = false
 local noclipConnection
 
@@ -78,9 +74,6 @@ LeftGroupBox:AddToggle("EnableNoClip", {
             MovementFlags.NoSlowdown = Value
         end
     })
------------------------------------------------------------
---                   🔥  INFINITE JUMP
------------------------------------------------------------
 
 local jumpPower = 25
 local jumpConnection
@@ -124,10 +117,6 @@ LeftGroupBox:AddSlider("InfiniteJumpPower", {
     end
 })
 
------------------------------------------------------------
---                   🔥  FALL SPEED
------------------------------------------------------------
-
 local fallSpeedEnabled = false
 local fallSpeedValue = 1
 
@@ -158,10 +147,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-
------------------------------------------------------------
---                   🔥  SPEED HACK
------------------------------------------------------------
 
 local speedValue = 100
 local speedConnection
@@ -205,14 +190,6 @@ LeftGroupBox:AddSlider("SpeedHackValue", {
     end
 })
 
------------------------------------------------------------
---                   🔥  JUMP HACK
------------------------------------------------------------
-
------------------------------------------------------------
--- 🔁 Auto-update R6/R15 on respawn
------------------------------------------------------------
-
 LP.CharacterAdded:Connect(function(char)
     char:WaitForChild("Humanoid")
     
@@ -237,7 +214,6 @@ task.spawn(function()
 
     local LocalPlayer = Players.LocalPlayer
 
-    -- ⚙️ Стейт
     local MovementFlags = {
         AutoJump = false,
         NoFallDamage = false,
@@ -261,7 +237,6 @@ task.spawn(function()
     local healthConnection
     local stateConnection
 
-    -- 🧩 оновлення поточного персонажа
     local function SetupCharacter(char)
         if not char then return end
 
@@ -274,16 +249,13 @@ task.spawn(function()
         DefaultHipHeight = CurrentHumanoid.HipHeight
         lastHealth = CurrentHumanoid.Health
 
-        -- відключаємо старі конекти
         if healthConnection then healthConnection:Disconnect() end
         if stateConnection then stateConnection:Disconnect() end
 
-        -- відслідковуємо стейт (Freefall/Running і тд)
         stateConnection = CurrentHumanoid.StateChanged:Connect(function(old, new)
             lastState = new
         end)
 
-        -- No Fall Damage по Humanoid.Health
         healthConnection = CurrentHumanoid.HealthChanged:Connect(function(newHealth)
             if not MovementFlags.NoFallDamage then
                 lastHealth = newHealth
@@ -291,11 +263,9 @@ task.spawn(function()
             end
 
             if lastHealth and newHealth < lastHealth then
-                -- якщо було падіння: останній стейт Freefall або FallingDown/Ragdoll
                 if lastState == Enum.HumanoidStateType.Freefall
                 or lastState == Enum.HumanoidStateType.FallingDown
                 or lastState == Enum.HumanoidStateType.Ragdoll then
-                    -- повертаємо хп
                     CurrentHumanoid.Health = lastHealth
                     return
                 end
@@ -305,7 +275,6 @@ task.spawn(function()
         end)
     end
 
-    -- підписуємось на поточного персонажа
     if LocalPlayer.Character then
         SetupCharacter(LocalPlayer.Character)
     end
@@ -316,13 +285,9 @@ task.spawn(function()
         SetupCharacter(char)
     end)
 
-    ----------------------------------------------------------------
-    -- 🔁 ГОЛОВНИЙ РУХОВИЙ ЛУП (універсальний)
-    ----------------------------------------------------------------
     RunService.RenderStepped:Connect(function(dt)
         if not CurrentHumanoid or not RootPart then return end
 
-        -- ==== AutoSprint + NoSlowdown ====
         local targetSpeed = DefaultWalkSpeed
 
         if MovementFlags.AutoSprint then
@@ -330,12 +295,10 @@ task.spawn(function()
         end
 
         if MovementFlags.NoSlowdown then
-            -- якщо гра намагається урізати швидкість — повертаємо
             if CurrentHumanoid.WalkSpeed < targetSpeed then
                 CurrentHumanoid.WalkSpeed = targetSpeed
             end
         else
-            -- якщо NoSlowdown вимкнено, але AutoSprint увімкнено — просто ставимо спринт
             if MovementFlags.AutoSprint then
                 CurrentHumanoid.WalkSpeed = targetSpeed
             else
@@ -343,16 +306,13 @@ task.spawn(function()
             end
         end
 
-        -- ==== AutoJump ====
         if MovementFlags.AutoJump then
             if CurrentHumanoid.FloorMaterial ~= Enum.Material.Air then
                 CurrentHumanoid.Jump = true
             end
         end
 
-        -- ==== Wall Climb ====
         if MovementFlags.WallClimb then
-            -- якщо ти тиснеш W і впираєшся в стіну — лізеш вверх
             if UIS:IsKeyDown(Enum.KeyCode.W) then
                 local cam = Workspace.CurrentCamera
                 local direction = cam.CFrame.LookVector
@@ -364,19 +324,16 @@ task.spawn(function()
                 local result = Workspace:Raycast(RootPart.Position, direction * 3, rayParams)
 
                 if result and result.Instance and CurrentHumanoid.FloorMaterial == Enum.Material.Air then
-                    -- піднімаємось догори
                     RootPart.Velocity = Vector3.new(RootPart.Velocity.X, ClimbSpeed, RootPart.Velocity.Z)
                 end
             end
         end
 
-        -- ==== Walk on Water / Lava ====
         if MovementFlags.WalkOnWater then
             local rayParams = RaycastParams.new()
             rayParams.FilterType = Enum.RaycastFilterType.Blacklist
             rayParams.FilterDescendantsInstances = { LocalPlayer.Character }
 
-            -- дивимось що під нами
             local result = Workspace:Raycast(RootPart.Position, Vector3.new(0, -6, 0), rayParams)
 
             if result and result.Instance then
@@ -387,7 +344,6 @@ task.spawn(function()
                 local isLava = name:find("lava")
 
                 if isWater or isLava then
-                    -- тримаємося на поверхні
                     CurrentHumanoid.HipHeight = 5
                     RootPart.Velocity = Vector3.new(RootPart.Velocity.X, 0, RootPart.Velocity.Z)
                 else
@@ -403,7 +359,6 @@ task.spawn(function()
         end
     end)
 
-    -- Wall Climb
     LeftGroupBox:AddToggle('WallClimb_Toggle', {
         Text = 'Wall Climb',
         Default = false,
@@ -440,7 +395,6 @@ Game:AddToggle("FOVToggle", {
         FOVSettings.Enabled = v
         
         if not v then
-            -- коли виключаєш → ставимо стандартний FOV
             Camera.FieldOfView = 70
         end
     end
