@@ -5128,12 +5128,12 @@ local Library do
             Position = UDim2New(0, Camera.ViewportSize.X / 3.3, 0, Camera.ViewportSize.Y / 3.3),
             Size = Window.Size
         }) do
-            Items["Side"] = Instances:Create("Frame", {
+			Items["Side"] = Instances:Create("Frame", {
                 Parent = Items["Window"].Instance,
                 Name = "\0",
                 Position = UDim2New(0, 12, 0, 20),
                 BorderColor3 = FromRGB(42, 49, 45),
-                Size = UDim2.new(0, 160, 1, -44),
+                Size = UDim2New(0, 200, 1, -24),
                 BorderSizePixel = 2,
                 BackgroundColor3 = FromRGB(20, 24, 21)
             })  Items["Side"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Outline"})
