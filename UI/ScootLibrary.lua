@@ -5218,7 +5218,7 @@ local Library do
                 Parent = Items["Side"].Instance,
                 Name = "\0",
                 BackgroundTransparency = 1,
-                Position = UDim2New(0, 0, 0, 60),
+                Position = UDim2New(0, 0, 0, 30),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(1, 0, 1, -135),
                 BorderSizePixel = 0,
