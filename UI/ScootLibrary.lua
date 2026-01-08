@@ -5131,31 +5131,12 @@ local Library do
             Items["Side"] = Instances:Create("Frame", {
                 Parent = Items["Window"].Instance,
                 Name = "\0",
-                Position = UDim2New(0, 12, 0, 12),
+                Position = UDim2New(0, 12, 0, 20),
                 BorderColor3 = FromRGB(42, 49, 45),
-                Size = UDim2New(0, 200, 1, -24),
+                Size = UDim2.new(0, 160, 1, -44),
                 BorderSizePixel = 2,
                 BackgroundColor3 = FromRGB(20, 24, 21)
             })  Items["Side"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Outline"})
-
--- Додаємо твій тайтл зверху лівої панелі (замість/під логотипом)
-local TitleLabel = Instances:Create("TextLabel", {
-    Parent = Items["Side"].Instance,
-    Name = "NexusTitle",
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0.5, 0, 0, 15),
-Size = UDim2.new(0, 300, 0, 30),
-TextXAlignment = Enum.TextXAlignment.Center,           -- ширина майже вся ліва панель, висота 30px
-    Text = "NexusVision | Counter Blox | v1.0 Release",
-    TextColor3 = Color3.fromRGB(220, 220, 220),
-    TextSize = 16,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextYAlignment = Enum.TextYAlignment.Top,
-    Font = Enum.Font.GothamBold,
-    ZIndex = 10
-})
-
-TitleLabel:AddToTheme({TextColor3 = "Text"})
 
             Items["Side"]:Border("Border")
 
