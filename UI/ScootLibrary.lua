@@ -1280,10 +1280,10 @@ local Library do
                         Instances:Create("UIPadding", {
                             Parent = NewColumn.Instance,
                             Name = "\0",
-                            PaddingTop = UDimNew(0, 2),
-                            PaddingBottom = UDimNew(0, 2),
-                            PaddingRight = UDimNew(0, 2),
-                            PaddingLeft = UDimNew(0, 2)
+                            PaddingTop = UDimNew(0, 2),     -- можна залишити 2 зверху
+   							PaddingBottom = UDimNew(0, 2),  -- можна залишити 2 знизу
+    						PaddingRight = UDimNew(0, 0),   ← ЗМІНИ НА 0
+    						PaddingLeft = UDimNew(0, 0)     ← ЗМІНИ НА 0
                         })
 
                         Instances:Create("UIListLayout", {
