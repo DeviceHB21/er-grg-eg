@@ -1282,8 +1282,8 @@ local Library do
                             Name = "\0",
                             PaddingTop = UDimNew(0, 2),     -- можна залишити 2 зверху
    							PaddingBottom = UDimNew(0, 2),  -- можна залишити 2 знизу
-    						PaddingRight = UDimNew(0, 0), 
-    						PaddingLeft = UDimNew(0, 0)
+    						PaddingRight = UDimNew(0, 2), 
+    						PaddingLeft = UDimNew(0, 2)
                         })
 
                         Instances:Create("UIListLayout", {
@@ -5133,7 +5133,7 @@ local Library do
                 Name = "\0",
                 Position = UDim2New(0, 12, 0, 12),
                 BorderColor3 = FromRGB(42, 49, 45),
-                Size = UDim2New(0, 150, 1, -24),
+                Size = UDim2New(0, 190, 1, -24),
                 BorderSizePixel = 2,
                 BackgroundColor3 = FromRGB(20, 24, 21)
             })  Items["Side"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Outline"})
@@ -5948,7 +5948,7 @@ local Library do
             Instances:Create("UIListLayout", {
                 Parent = Items["Content"].Instance,
                 Name = "\0",
-                Padding = UDimNew(0, 2),
+                Padding = UDimNew(0, 8),
                 SortOrder = Enum.SortOrder.LayoutOrder
             })
 
