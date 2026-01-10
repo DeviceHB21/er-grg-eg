@@ -5220,7 +5220,7 @@ local Library do
                 BackgroundTransparency = 1,
                 Position = UDim2New(0, 0, 0, 10),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(1, 0, 1, -120),
+                Size = UDim2New(1, 0, 1, -80),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
