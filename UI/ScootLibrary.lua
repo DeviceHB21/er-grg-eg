@@ -5112,7 +5112,7 @@ local Library do
         local Window = { 
             Logo = Data.Logo or Data.logo or "",
             FadeTime = Data.FadeTime or Data.fadetime or 0.4,
-            Size = Data.Size or Data.size or UDim2New(0, 520, 0, 380),
+            Size = Data.Size or Data.size or UDim2New(0, 620, 0, 450),
 
             Pages = { },
             Items = { },
