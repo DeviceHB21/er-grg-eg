@@ -5948,7 +5948,7 @@ local Library do
             Instances:Create("UIListLayout", {
                 Parent = Items["Content"].Instance,
                 Name = "\0",
-                Padding = UDimNew(0, 8),
+                Padding = UDimNew(0, 4),
                 SortOrder = Enum.SortOrder.LayoutOrder
             })
 
