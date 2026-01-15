@@ -8,7 +8,7 @@ local ThemeManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/
 local SaveManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/DeviceHB21/Custom-Liblinoria/refs/heads/main/addons/SaveManager.lua'))()
 
 local Window = Library:CreateWindow({
-    Title = 'NexusVision | AR2 | v1.2 Release',
+    Title = 'NexusVision | AR2 | v1.3',
     Center = true,
     AutoShow = true,
     TabPadding = 8,
@@ -2789,6 +2789,114 @@ BuletTracer:AddSlider('BulletTracer_Length', {
 end)
 
 local LocalPlayer = Tabs.Visuals:AddRightGroupbox('Local Player')
+
+local flags = {
+    ChinaHat = false,
+    ChinaHatColor = Color3.fromRGB(175, 25, 255)
+}
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function createChinaHat(character)
+    if not character then return end
+    
+    local head = character:WaitForChild("Head", 5)
+    if not head then return end
+
+    -- Видаляємо старий ChinaHat, якщо був
+    local old = character:FindFirstChild("ChinaHat")
+    if old then
+        old:Destroy()
+    end
+
+    local cone = Instance.new("Part")
+    cone.Name = "ChinaHat"
+    cone.Size = Vector3.new(1, 1, 1)
+    cone.Transparency = 0.8          -- сам меш майже невидимий
+    cone.CanCollide = false
+    cone.Anchored = false
+    cone.Massless = true
+    cone.CastShadow = false
+
+    local mesh = Instance.new("SpecialMesh")
+    mesh.MeshType = Enum.MeshType.FileMesh
+    mesh.MeshId = "rbxassetid://1033714"   -- старий класичний конус
+    mesh.Scale = Vector3.new(1.8, 1.1, 1.8)
+    mesh.Parent = cone
+
+    -- Позиціонуємо над головою
+    cone.CFrame = head.CFrame * CFrame.new(0, 0.9, 0)
+
+    local weld = Instance.new("WeldConstraint")
+    weld.Part0 = head
+    weld.Part1 = cone
+    weld.Parent = cone
+
+    -- Highlight (CHAMS)
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = cone
+    highlight.FillColor = flags.ChinaHatColor
+    highlight.FillTransparency = 0.25
+    highlight.OutlineTransparency = 1       -- без обводки
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = cone
+
+    cone.Parent = character
+end
+
+-- Оновлення при респавні
+local function onCharacterAdded(char)
+    task.wait(0.3) -- маленька затримка, щоб точно все вантажилось
+    if flags.ChinaHat then
+        createChinaHat(char)
+    end
+end
+
+-- Підписуємось один раз
+player.CharacterAdded:Connect(onCharacterAdded)
+
+-- Якщо персонаж вже завантажений на момент запуску скрипта
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+
+-- Твій UI (наприклад Linoria / Fluxus / тощо)
+LocalPlayer:AddToggle('ChinaHatToggle', {
+    Text = 'China Hat',
+    Default = false,
+    Callback = function(Value)
+        flags.ChinaHat = Value
+        
+        local char = player.Character
+        if not char then return end
+        
+        if Value then
+            createChinaHat(char)
+        else
+            local hat = char:FindFirstChild("ChinaHat")
+            if hat then hat:Destroy() end
+        end
+    end
+})
+:AddColorPicker('ChinaHatColor', {
+    Default = flags.ChinaHatColor,
+    Title = 'China Hat Color',
+    Callback = function(Value)
+        flags.ChinaHatColor = Value
+        
+        local char = player.Character
+        if not char then return end
+        
+        local hat = char:FindFirstChild("ChinaHat")
+        if hat then
+            local hl = hat:FindFirstChildOfClass("Highlight")
+            if hl then
+                hl.FillColor = Value
+            end
+        end
+    end
+})
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
