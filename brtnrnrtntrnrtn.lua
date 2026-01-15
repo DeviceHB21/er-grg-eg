@@ -2456,6 +2456,8 @@ RightGroupBox:AddDropdown('Technology_Mode', {
 	end
 })
 
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
 local timeConnection
 local customTime = 12
 
@@ -2464,11 +2466,14 @@ RightGroupBox:AddToggle('CustomTime_Toggle', {
 	Default = false,
 	Callback = function(Value)
 		if Value then
+			-- Миттєве встановлення при увімкненні
+			Lighting.ClockTime = customTime
 			if timeConnection then
 				timeConnection:Disconnect()
 				timeConnection = nil
 			end
-			timeConnection = Lighting:GetPropertyChangedSignal("ClockTime"):Connect(function()
+			-- RenderStepped — виконується ПЕРЕД рендером (найвищий пріоритет, перекриває сервер)
+			timeConnection = RunService.RenderStepped:Connect(function()
 				Lighting.ClockTime = customTime
 			end)
 		else
@@ -2488,6 +2493,10 @@ RightGroupBox:AddSlider('CustomTime_Slider', {
 	Rounding = 1,
 	Callback = function(Value)
 		customTime = Value
+		-- Миттєве оновлення при зміні слайдера (якщо тогл увімкнено)
+		if timeConnection then
+			Lighting.ClockTime = customTime
+		end
 	end
 })
 
