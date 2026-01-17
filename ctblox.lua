@@ -266,7 +266,7 @@ end)
 setreadonly(MT, true)
 
 -- Твой UI код для переключателя
-AimbotGroupBox:AddToggle("SilentAimEnable", {
+Aim:AddToggle("SilentAimEnable", {
     Text = "Silent Aim Enable",
     Default = false,
     Tooltip = "Enable Silent Aim",
