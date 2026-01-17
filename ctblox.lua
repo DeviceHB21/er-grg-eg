@@ -485,7 +485,6 @@ end
 CombatGroupBox:AddToggle("NoRecoilToggle", {
     Text = "No Recoil",
     Default = false,
-    Tooltip = "Повністю прибирає віддачу (камера + зброя)",
     Callback = function(Value)
         getgenv().NoRecoilEnabled = Value
     end
@@ -579,7 +578,6 @@ local RapidFireConnection
 CombatGroupBox:AddToggle("RapidFireToggle", {
     Text = "Rapid Fire",
     Default = false,
-    Tooltip = "Max fire rate",
 
     Callback = function(Value)
         getgenv().RapidFireEnabled = Value
