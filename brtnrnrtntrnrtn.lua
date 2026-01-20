@@ -907,8 +907,6 @@ local HeadExpander = Tabs.Combat:AddRightGroupbox('Head Expander')
 end)
 
 local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Player Esp')
-
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -918,7 +916,6 @@ local flags = {}
 local settings = {
     maxHPVisibility = 100,
     boxType = "Boxes", 
-    boxRender = "Dynamic",
     metric = "Meters",
     useDisplayName = true
 }
@@ -1077,7 +1074,6 @@ LeftGroupBox:AddSlider('dis chek', {
     end
 })
 
-
 LeftGroupBox:AddButton({
     Text = "Map Esp",
     DoubleClick = false,
@@ -1096,15 +1092,6 @@ LeftGroupBox:AddSlider('max hp visibility', {
     Rounding = 1,
     Callback = function(Value)
         settings.maxHPVisibility = Value
-    end
-})
-
-LeftGroupBox:AddDropdown('box render', {
-    Text = "Box Render",
-    Values = {"Dynamic", "Static"},
-    Default = "Dynamic",
-    Callback = function(Value)
-        settings.boxRender = Value
     end
 })
 
@@ -1134,19 +1121,62 @@ LeftGroupBox:AddToggle('use display name', {
     end
 })
 
+-- Функція для отримання реальних розмірів персонажа
+local function GetCharacterBoundingBox(char)
+    local minX, maxX, minY, maxY, minZ, maxZ = math.huge, -math.huge, math.huge, -math.huge, math.huge, -math.huge
+    local hasParts = false
+    
+    for _, part in ipairs(char:GetChildren()) do
+        if part:IsA("BasePart") and part.Transparency < 1 then
+            local cf = part.CFrame
+            local size = part.Size
+            local corners = {
+                cf * CFrame.new(size.X/2, size.Y/2, size.Z/2),
+                cf * CFrame.new(-size.X/2, size.Y/2, size.Z/2),
+                cf * CFrame.new(size.X/2, -size.Y/2, size.Z/2),
+                cf * CFrame.new(-size.X/2, -size.Y/2, size.Z/2),
+                cf * CFrame.new(size.X/2, size.Y/2, -size.Z/2),
+                cf * CFrame.new(-size.X/2, size.Y/2, -size.Z/2),
+                cf * CFrame.new(size.X/2, -size.Y/2, -size.Z/2),
+                cf * CFrame.new(-size.X/2, -size.Y/2, -size.Z/2)
+            }
+            
+            for _, corner in ipairs(corners) do
+                local pos = corner.Position
+                minX = math.min(minX, pos.X)
+                maxX = math.max(maxX, pos.X)
+                minY = math.min(minY, pos.Y)
+                maxY = math.max(maxY, pos.Y)
+                minZ = math.min(minZ, pos.Z)
+                maxZ = math.max(maxZ, pos.Z)
+            end
+            hasParts = true
+        end
+    end
+    
+    if not hasParts then
+        return nil
+    end
+    
+    local center = Vector3.new((minX + maxX)/2, (minY + maxY)/2, (minZ + maxZ)/2)
+    local size = Vector3.new(maxX - minX, maxY - minY, maxZ - minZ)
+    
+    return center, size
+end
+
 local function CreateESP()
     local esp = {}
     
     esp.BoxOutline = Drawing.new("Square")
     esp.BoxOutline.Visible = false
     esp.BoxOutline.Color = Color3.new(0,0,0)
-    esp.BoxOutline.Thickness = 2
+    esp.BoxOutline.Thickness = 2  -- СТАРЕ: було 2
     esp.BoxOutline.Filled = false
     
     esp.Box = Drawing.new("Square")
     esp.Box.Visible = false
     esp.Box.Color = Color3.new(1,1,1)
-    esp.Box.Thickness = 1
+    esp.Box.Thickness = 1  -- СТАРЕ: було 1
     esp.Box.Filled = false
     
     esp.FillBox = Drawing.new("Square")
@@ -1172,6 +1202,7 @@ local function CreateESP()
     for i = 1, 8 do
         local line = Drawing.new("Line")
         line.Visible = false
+        line.Thickness = 1  -- СТАРЕ: було 1
         table.insert(esp.CornerLines, line)
     end
     
@@ -1179,13 +1210,14 @@ local function CreateESP()
     for i = 1, 20 do
         local line = Drawing.new("Line")
         line.Visible = false
+        line.Thickness = 1.5  -- СТАРЕ: було 1.5
         table.insert(esp.SkeletonLines, line)
     end
     
     esp.HealthBarOutline = Drawing.new("Square")
     esp.HealthBarOutline.Visible = false
     esp.HealthBarOutline.Color = Color3.new(0,0,0)
-    esp.HealthBarOutline.Thickness = 1
+    esp.HealthBarOutline.Thickness = 1  -- СТАРЕ: було 1
     esp.HealthBarOutline.Filled = false
     
     esp.HealthBar = Drawing.new("Square")
@@ -1223,7 +1255,7 @@ local function CreateESP()
     
     esp.TracerLine = Drawing.new("Line")
     esp.TracerLine.Visible = false
-    esp.TracerLine.Thickness = 1
+    esp.TracerLine.Thickness = 1  -- СТАРЕ: було 1
     
     return esp
 end
@@ -1320,8 +1352,15 @@ RunService.RenderStepped:Connect(function()
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         
         if hrp and hum and hum.Health > 0 then
-            local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-            local distance = (camPos - hrp.Position).Magnitude
+            -- НОВА МЕХАНІКА: отримуємо реальні розміри персонажа
+            local center, bboxSize = GetCharacterBoundingBox(char)
+            if not center then
+                center = hrp.Position
+                bboxSize = Vector3.new(4, 6, 2) -- стандартні розміри
+            end
+            
+            local pos, onScreen = Camera:WorldToViewportPoint(center)
+            local distance = (camPos - center).Magnitude
             
             if not onScreen or distance > maxDistance then
                 for _, v in pairs(esp) do
@@ -1342,13 +1381,67 @@ RunService.RenderStepped:Connect(function()
                 continue
             end
             
-            local boxWidth, boxHeight = 40, 60
-            if settings.boxRender == "Dynamic" then
-                local scale = math.clamp(100 / distance, 0.5, 2)
-                boxWidth, boxHeight = 40 * scale, 60 * scale
+            -- НОВА МЕХАНІКА: перетворюємо 3D розміри в 2D екранні розміри
+            local function GetScreenSizeFromBBox()
+                local minScreen = Vector2.new(math.huge, math.huge)
+                local maxScreen = Vector2.new(-math.huge, -math.huge)
+                
+                -- Перевіряємо всі 8 кутів bounding box
+                local halfSize = bboxSize / 2
+                local corners = {
+                    Vector3.new(-halfSize.X, -halfSize.Y, -halfSize.Z),
+                    Vector3.new(halfSize.X, -halfSize.Y, -halfSize.Z),
+                    Vector3.new(-halfSize.X, halfSize.Y, -halfSize.Z),
+                    Vector3.new(halfSize.X, halfSize.Y, -halfSize.Z),
+                    Vector3.new(-halfSize.X, -halfSize.Y, halfSize.Z),
+                    Vector3.new(halfSize.X, -halfSize.Y, halfSize.Z),
+                    Vector3.new(-halfSize.X, halfSize.Y, halfSize.Z),
+                    Vector3.new(halfSize.X, halfSize.Y, halfSize.Z)
+                }
+                
+                for _, offset in ipairs(corners) do
+                    local worldPos = center + offset
+                    local screenPos = Camera:WorldToViewportPoint(worldPos)
+                    if screenPos.Z > 0 then
+                        minScreen = Vector2.new(
+                            math.min(minScreen.X, screenPos.X),
+                            math.min(minScreen.Y, screenPos.Y)
+                        )
+                        maxScreen = Vector2.new(
+                            math.max(maxScreen.X, screenPos.X),
+                            math.max(maxScreen.Y, screenPos.Y)
+                        )
+                    end
+                end
+                
+                return minScreen, maxScreen
             end
             
-            local xPos, yPos = pos.X - boxWidth/2, pos.Y - boxHeight/2
+            local minScreen, maxScreen = GetScreenSizeFromBBox()
+            local boxWidth = maxScreen.X - minScreen.X
+            local boxHeight = maxScreen.Y - minScreen.Y
+            local xPos, yPos = minScreen.X, minScreen.Y
+            
+            -- СТАРА ТОВЩИНА: фіксовані значення як було
+            local boxThickness = 1  -- СТАРЕ: було 1
+            local skeletonThickness = 1.5  -- СТАРЕ: було 1.5
+            local tracerThickness = 1  -- СТАРЕ: було 1
+            
+            -- НОВА МЕХАНІКА: якщо персонаж присідає - робимо жирніше
+            if hum then
+                local isCrouching = hum.HipHeight < 2  -- перевірка на присідання
+                if isCrouching then
+                    boxThickness = 1.5  -- Трохи жирніше при присіданні, але не дуже
+                    skeletonThickness = 2
+                end
+            end
+            
+            -- Оновлюємо товщини
+            esp.Box.Thickness = boxThickness
+            for _, line in ipairs(esp.CornerLines) do
+                line.Thickness = boxThickness
+            end
+            esp.TracerLine.Thickness = tracerThickness
             
             local boxColor = flags["color box"] or Color3.new(1,1,1)
             local fillColor = flags["color fill box"] or Color3.fromRGB(255, 255, 255)
@@ -1478,7 +1571,7 @@ RunService.RenderStepped:Connect(function()
                             line.From = Vector2.new(pos1.X, pos1.Y)
                             line.To = Vector2.new(pos2.X, pos2.Y)
                             line.Color = skeletonColor
-                            line.Thickness = 1.5
+                            line.Thickness = skeletonThickness
                             line.Visible = true
                             
                             boneIndex = boneIndex + 1
@@ -1514,7 +1607,7 @@ RunService.RenderStepped:Connect(function()
                 local fullColor = flags["color hp full"] or Color3.fromRGB(0, 255, 0)
                 local hpColor = lowColor:Lerp(fullColor, perc)
                 
-                local barWidth = 2
+                local barWidth = 2  -- СТАРА товщина хелсбару
                 local barOffset = 6
                 local barX = xPos - barOffset
                 local barY = yPos
