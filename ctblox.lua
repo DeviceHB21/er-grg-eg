@@ -6,7 +6,7 @@ local ThemeManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/
 local SaveManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/DeviceHB21/Custom-Liblinoria/refs/heads/main/addons/SaveManager.lua'))()
 
 local Window = Library:CreateWindow({
-    Title = 'NexusVision | Counter Blox | v2.1',
+    Title = 'LunarCore.Xyz | Counter Blox | v2.1',
     Center = true,
     AutoShow = true,
     TabPadding = 8,
