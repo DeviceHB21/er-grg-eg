@@ -25,6 +25,66 @@ local Tabs = {
     local MovementBox = Tabs.Misc:AddLeftGroupbox('Movement')
 
 task.spawn(function()
+
+
+MovementBox:AddToggle('DoubleJumpToggle', {
+    Text = 'Double Jump',
+    Default = false,
+    Callback = function(Value)
+        doubleJumpEnabled = Value
+    end
+})
+
+repeat task.wait() until game:IsLoaded()
+
+local player = game:GetService("Players").LocalPlayer
+local jumpCount = 0
+local maxJumps = 1
+doubleJumpEnabled = false 
+
+-- Скидаємо лічильник коли на землі
+local function resetJumps(humanoid)
+    if humanoid and humanoid.FloorMaterial ~= Enum.Material.Air then
+        jumpCount = 0
+    end
+end
+
+-- Слідкуємо за стрибками
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Space and doubleJumpEnabled then
+        pcall(function()
+            if player and player.Character then
+                local humanoid = player.Character:FindFirstChild("Humanoid")
+                if humanoid then
+                    -- Якщо в повітрі і є ще стрибки
+                    if humanoid.FloorMaterial == Enum.Material.Air and jumpCount < maxJumps then
+                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        jumpCount = jumpCount + 1
+                    end
+                    
+                    -- Якщо на землі - скидаємо
+                    if humanoid.FloorMaterial ~= Enum.Material.Air then
+                        jumpCount = 0
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Постійно перевіряємо чи на землі
+task.spawn(function()
+    while true do
+        pcall(function()
+            if player and player.Character then
+                local humanoid = player.Character:FindFirstChild("Humanoid")
+                resetJumps(humanoid)
+            end
+        end)
+        task.wait(0.1)
+    end
+end)
+
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local UserInputService = game:GetService("UserInputService")
@@ -79,77 +139,19 @@ task.spawn(function()
     MovementBox:AddSlider('RunSpeedSlider', {
         Text = 'Running Speed',
         Min = 20,
-        Max = 30,
+        Max = 28,
         Default = 20,
         Rounding = 0,
         Callback = function(Value)
             movementFlags.runningSpeed = Value
         end
     })
-		
-    local CharBox = Tabs.Misc:AddLeftGroupbox('Character')
+    -- =====================================================
+--         DOUBLE JUMP - З ПЕРЕМИКАЧЕМ
+--         (можна вмикати/вимикати)
+-- =====================================================
 
-    CharBox:AddToggle('NoSprint_Toggle', {
-        Text = 'No Sprint Penalty',
-        Default = false,
-        Callback = function(Value)
-            movementFlags.noSprintPenalty = Value
-        end
-    })
-
-    CharBox:AddToggle('AntiDebuff_Toggle', {
-        Text = 'Anti Debuff',
-        Default = false,
-        Callback = function(Value)
-            movementFlags.antiDebuffEnabled = Value
-        end
-    })
-
-    CharBox:AddToggle('NoRagdoll_Toggle', {
-        Text = 'No Ragdoll',
-        Default = false,
-        Callback = function(Value)
-            movementFlags.noRagdollEnabled = Value
-        end
-    })
-
-    CharBox:AddToggle('InfJump_Toggle', {
-        Text = 'Infinite Jump',
-        Default = false,
-        Callback = function(Value)
-            movementFlags.infJumpEnabled = Value
-        end
-    })
-
-    CharBox:AddSlider('InfJumpPower_Slider', {
-        Text = 'Jump Power',
-        Min = 10,
-        Max = 100,
-        Default = 50,
-        Rounding = 0,
-        Callback = function(Value)
-            movementFlags.infJumpPower = Value
-        end
-    })
-
-    CharBox:AddToggle('NoFall_Toggle', {
-        Text = 'No Fall Speed',
-        Default = false,
-        Callback = function(Value)
-            movementFlags.noFallEnabled = Value
-        end
-    })
-
-    CharBox:AddSlider('NoFallSpeed_Slider', {
-        Text = 'Fall Speed Limit',
-        Min = 0,
-        Max = 50,
-        Default = 0,
-        Rounding = 0,
-        Callback = function(Value)
-            movementFlags.noFallSpeed = Value
-        end
-    })
+-- Додай цей перемикач туди, де в тебе MovementBox:
 
     local AntiAimBox = Tabs.Misc:AddRightGroupbox('Anti Aim')
 
@@ -403,61 +405,6 @@ Game:AddToggle("UnlockFPS", {
     end
 })
 
-    local Misc = Tabs.Misc:AddRightGroupbox('Misc')
-
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
-
-local Framework = require(ReplicatedFirst:WaitForChild("Framework"))
-Framework:WaitForLoaded()
-
-Misc:AddButton({
-    Text = "Bring Loot To Inventory",
-    DoubleClick = false,
-    Func = function()
-        for i, v in pairs(getgc(true)) do
-            if type(v) == "table" then
-                local value = rawget(v, "Id")
-                if value ~= nil and rawget(v, "ClassName") == "Interactable" and tostring(rawget(v, "Adornee")) == "Model" then
-                    local newid = string.sub(value, 37)
-                    Framework.Libraries.Network:Send("Client Interacted", value, false, newid)
-                end
-            end
-        end
-    end
-})
-
-Misc:AddButton({
-    Text = "Bring Loot To Ground",
-    DoubleClick = false,
-    Func = function()
-        for i, v in pairs(getgc(true)) do
-            if type(v) == "table" then
-                local value = rawget(v, "Id")
-                if value ~= nil and rawget(v, "ClassName") == "Interactable" and tostring(rawget(v, "Adornee")) == "Model" then
-                    local newid = string.sub(value, 37)
-                    Framework.Libraries.Network:Send("Client Interacted", value, false, newid)
-                    Framework.Libraries.Network:Send("Inventory Drop Item", newid)
-                end
-            end
-        end
-    end
-})
-
-Misc:AddButton({
-    Text = "Open All Containers",
-    DoubleClick = false,
-    Func = function()
-        for i, v in pairs(getgc(true)) do
-            if type(v) == "table" then
-                local value = rawget(v, "Id")
-                if value ~= nil and rawget(v, "ClassName") == "Entity" and rawget(v, "Type") == "Loot Group" then
-                    Framework.Libraries.Network:Send("Client Interacted", value)
-                end
-            end
-        end
-    end
-})
-
 task.spawn(function()
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
@@ -482,9 +429,7 @@ task.spawn(function()
         SilentHitChance = 100,
         SilentMaxDistance = 2000,
         SilentTargetType = "Closest To Mouse",
-        SilentTargetHitbox = "Head",
-        NoSpreadEnabled = false,
-        SpreadScale = 0,     
+        SilentTargetHitbox = "Head",   
         NoRecoilEnabled = false,
         RecoilScale = 0.1,  
         SnapLine = false,
@@ -548,11 +493,14 @@ task.spawn(function()
                 local part = char[hitbox]
                 local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
                 if not onScreen then continue end
-                local dist3D = (LP.Character and LP.Character:FindFirstChild("HumanoidRootPart"))
+                
+                local dist3D = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
                     and (LP.Character.HumanoidRootPart.Position - part.Position).Magnitude or math.huge
+                    
                 if dist3D > maxDistance then continue end
+                
                 local dist2D = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-                if dist2D > Settings.FOVRadius then continue end
+                
                 local distance = (targetType == "Closest To Mouse") and dist2D or dist3D
                 if distance < shortest then
                     shortest = distance
@@ -569,26 +517,8 @@ task.spawn(function()
         if mousemoverel then mousemoverel(delta.X, delta.Y) end
     end
 
-    local GetSpreadAngle = getupvalue(Bullets.Fire, 1)
+    -- No Recoil
     local GetFireImpulse = getupvalue(Bullets.Fire, 6)
-
-    setupvalue(Bullets.Fire, 1, function(Character, CCamera, Weapon, ...)
-        if Settings.NoSpreadEnabled then
-            local OldMoveState = Character.MoveState
-            local OldZooming = Character.Zooming
-            local OldFirstPerson = CCamera.FirstPerson
-            Character.MoveState = "Walking"
-            Character.Zooming = true
-            CCamera.FirstPerson = true
-            local ReturnArgs = {GetSpreadAngle(Character, CCamera, Weapon, ...)}
-            Character.MoveState = OldMoveState
-            Character.Zooming = OldZooming
-            CCamera.FirstPerson = OldFirstPerson
-            return unpack(ReturnArgs) * Settings.SpreadScale
-        end
-        return GetSpreadAngle(Character, CCamera, Weapon, ...)
-    end)
-
     setupvalue(Bullets.Fire, 6, function(...)
         local impulse = {GetFireImpulse(...)}
         if Settings.NoRecoilEnabled then
@@ -599,20 +529,20 @@ task.spawn(function()
         return unpack(impulse)
     end)
 
-    local oldFire
-    oldFire = hookfunction(Bullets.Fire, function(w, c, _, g, origin, dir, ...)
-        if not Settings.SilentEnabled then
-            return oldFire(w, c, _, g, origin, dir, ...)
-        end
-        local target = GetClosestPlayer(Settings.SilentTargetType, Settings.SilentTargetHitbox, Settings.SilentMaxDistance)
-        if target and math.random(1, 100) <= Settings.SilentHitChance then
-            local part = target:FindFirstChild(Settings.SilentTargetHitbox) or target:FindFirstChild("Head")
-            if part then
-                dir = (part.Position - origin).Unit
+    -- Silent Aim - СПРОЩЕНИЙ
+    local oldFire = Bullets.Fire
+    Bullets.Fire = function(w, c, _, g, origin, dir, ...)
+        if Settings.SilentEnabled then
+            local target = GetClosestPlayer(Settings.SilentTargetType, Settings.SilentTargetHitbox, Settings.SilentMaxDistance)
+            if target and math.random(1, 100) <= Settings.SilentHitChance then
+                local part = target:FindFirstChild(Settings.SilentTargetHitbox)
+                if part then
+                    dir = (part.Position - origin).Unit
+                end
             end
         end
         return oldFire(w, c, _, g, origin, dir, ...)
-    end)
+    end
 
     UIS.InputBegan:Connect(function(input)
         if input.UserInputType == Settings.AimbotHoldKey then Holding = true end
@@ -623,12 +553,15 @@ task.spawn(function()
 
     RunService.RenderStepped:Connect(function()
         UpdateFOV()
+        
         local target = GetClosestPlayer(Settings.AimbotTargetType, Settings.AimbotTargetHitbox, Settings.AimbotMaxDistance)
+        
         if not target or not target:FindFirstChild(Settings.AimbotTargetHitbox) then
             SnapLine.Visible = false
             SnapOutline.Visible = false
             return
         end
+        
         local part = target[Settings.AimbotTargetHitbox]
         local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
         if not onScreen then return end
@@ -675,7 +608,7 @@ task.spawn(function()
     local SilentAimBox = Tabs.Combat:AddLeftGroupbox('Silent Aim')
     SilentAimBox:AddToggle('Silent_Toggle', {Text = 'Enable Silent Aim', Default = false, Callback = function(v) Settings.SilentEnabled = v end})
     SilentAimBox:AddSlider('HitChance_Slider', {Text = 'Hit Chance', Min = 1, Max = 100, Default = 100, Rounding = 1, Callback = function(v) Settings.SilentHitChance = v end})
-    SilentAimBox:AddSlider('MaxDistance_Slider', {Text = 'Max Distance', Min = 100, Max = 3000, Default = 2000, Rounding = 1, Callback = function(v) Settings.SilentMaxDistance = v end})
+    SilentAimBox:AddSlider('MaxDistance_Slider', {Text = 'Silent Max Distance', Min = 100, Max = 3000, Default = 2000, Rounding = 1, Callback = function(v) Settings.SilentMaxDistance = v end})
     SilentAimBox:AddDropdown('Silent_Type', {Text = 'Silent Target Type', Default = 'Closest To Mouse', Values = {'Closest To Mouse', 'Closest To Player'}, Callback = function(v) Settings.SilentTargetType = v end})
     SilentAimBox:AddDropdown('Silent_Hitbox', {Text = 'Silent Hitbox', Default = 'Head', Values = {'Head','HumanoidRootPart','UpperTorso','LowerTorso'}, Callback = function(v) Settings.SilentTargetHitbox = v end})
 
@@ -692,6 +625,26 @@ task.spawn(function()
 
         local GunModsBox = Tabs.Combat:AddRightGroupbox('Gun Mods')
 
+GunModsBox:AddToggle('AlwaysSuppressed_Toggle', {
+    Text = 'Always Suppressed',
+    Default = false,
+    Callback = function(State)
+        if not State then return end
+        
+        repeat task.wait() until game:IsLoaded() and game:GetService("ReplicatedFirst"):FindFirstChild("Framework")
+        
+        local Framework = require(game:GetService("ReplicatedFirst")["Framework"])
+        local oldFire = Framework["Libraries"]["Bullets"]["Fire"]
+        
+        Framework["Libraries"]["Bullets"]["Fire"] = function(...)
+            local args = {...}
+            if args[4] then 
+                args[4]["SuppressedByDefault"] = true 
+            end
+            return oldFire(unpack(args))
+        end
+    end
+})
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local ReplicatedFirst = game:GetService("ReplicatedFirst")
     local Players = game:GetService("Players")
@@ -732,46 +685,127 @@ task.spawn(function()
     end)
 
     GunModsBox:AddToggle('UnlockFiremodes_Toggle', {
-        Text = 'Unlock Firemodes',
-        Default = false,
-        Callback = function(State)
-            if not State then return end
-
-            local Player = Players.LocalPlayer
-            local Character = Player.Character or Player.CharacterAdded:Wait()
-
-            repeat task.wait() until Character:FindFirstChild("Actions") and Character.Actions:FindFirstChild("ToolAction")
-
-            local OldToolAction
-            OldToolAction = hookfunction(Character.Actions.ToolAction, newcclosure(function(Self, ...)
-                if not Self.EquippedItem then 
-                    return OldToolAction(Self, ...) 
-                end
-
-                local FireModes = Self.EquippedItem.FireModes
-                if not FireModes then 
-                    return OldToolAction(Self, ...) 
-                end
-
-                -- додаємо всі режими
-                for _, Mode in ipairs({"Semiautomatic", "Automatic", "Burst"}) do
-                    if not table.find(FireModes, Mode) then
-                        setreadonly(FireModes, false)
-                        table.insert(FireModes, Mode)
-                        setreadonly(FireModes, true)
+    Text = 'Unlock Firemodes',
+    Default = false,
+    Callback = function(State)
+        if not State then return end
+        
+        repeat task.wait() until game:IsLoaded() and game:GetService("ReplicatedFirst"):FindFirstChild("Framework")
+        
+        local Framework = require(game:GetService("ReplicatedFirst"):FindFirstChild("Framework"))
+        local PlayerClass = Framework.Classes.Players.get()
+        
+        -- Зберігаємо оригінальні функції
+        local oldSend = Framework.Libraries.Network.Send
+        
+        -- Хук на мережеві події
+        Framework.Libraries.Network.Send = function(self, event, ...)
+            if event == "Inventory Use Item" then
+                local args = {...}
+                local itemId = args[1]
+                
+                pcall(function()
+                    if Framework.Configs and Framework.Configs.ItemData then
+                        local item = Framework.Configs.ItemData[itemId]
+                        if item and item.FireConfig then
+                            -- Додаємо режими, не видаляючи старі
+                            local modes = {}
+                            for _, mode in ipairs(item.FireModes or {}) do
+                                modes[mode] = true
+                            end
+                            modes["Automatic"] = true
+                            modes["Semiautomatic"] = true
+                            modes["Burst"] = true
+                            
+                            local newModes = {}
+                            for mode, _ in pairs(modes) do
+                                table.insert(newModes, mode)
+                            end
+                            item.FireModes = newModes
+                        end
                     end
-                end
-
-                return OldToolAction(Self, ...)
-            end))
+                end)
+            end
+            return oldSend(self, event, ...)
         end
-    })
-
-    GunModsBox:AddToggle('NoSpread_Toggle', {Text = 'No Spread', Default = false, Callback = function(v) Settings.NoSpreadEnabled = v end})
-    GunModsBox:AddSlider('SpreadAmount_Slider', {Text = 'Spread Amount', Min = 0, Max = 100, Default = 0, Rounding = 1, Callback = function(v) Settings.SpreadScale = v / 100 end})
+        
+        -- Чекаємо на появу персонажа
+        repeat task.wait() until PlayerClass and PlayerClass.Character
+        
+        -- Зберігаємо функцію екіпірування
+        local oldEquip = PlayerClass.Character.Equip
+        
+        -- Хук на екіпірування
+        PlayerClass.Character.Equip = function(self, item, ...)
+            if item and item.__item then
+                local modes = {}
+                for _, mode in ipairs(item.__item.FireModes or {}) do
+                    modes[mode] = true
+                end
+                modes["Automatic"] = true
+                modes["Semiautomatic"] = true
+                modes["Burst"] = true
+                
+                local newModes = {}
+                for mode, _ in pairs(modes) do
+                    table.insert(newModes, mode)
+                end
+                item.__item.FireModes = newModes
+            end
+            return oldEquip(self, item, ...)
+        end
+        
+        -- Розблокування поточної зброї
+        if PlayerClass.Character.EquippedItem then
+            local weapon = PlayerClass.Character.EquippedItem.__item
+            if weapon then
+                local modes = {}
+                for _, mode in ipairs(weapon.FireModes or {}) do
+                    modes[mode] = true
+                end
+                modes["Automatic"] = true
+                modes["Semiautomatic"] = true
+                modes["Burst"] = true
+                
+                local newModes = {}
+                for mode, _ in pairs(modes) do
+                    table.insert(newModes, mode)
+                end
+                weapon.FireModes = newModes
+            end
+        end
+        
+        -- Простий моніторинг без помилок
+        task.spawn(function()
+            while true do
+                task.wait(1)
+                pcall(function()
+                    if PlayerClass and PlayerClass.Character and PlayerClass.Character.EquippedItem then
+                        local weapon = PlayerClass.Character.EquippedItem.__item
+                        if weapon then
+                            local modes = {}
+                            for _, mode in ipairs(weapon.FireModes or {}) do
+                                modes[mode] = true
+                            end
+                            modes["Automatic"] = true
+                            modes["Semiautomatic"] = true
+                            modes["Burst"] = true
+                            
+                            local newModes = {}
+                            for mode, _ in pairs(modes) do
+                                table.insert(newModes, mode)
+                            end
+                            weapon.FireModes = newModes
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+})
 
     GunModsBox:AddToggle('NoRecoil_Toggle', {Text = 'No Recoil', Default = false, Callback = function(v) Settings.NoRecoilEnabled = v end})
-    GunModsBox:AddSlider('RecoilControl_Slider', {Text = 'Recoil Control', Min = 0, Max = 100, Default = 10, Rounding = 1, Callback = function(v) Settings.RecoilScale = v / 100 end})
+    GunModsBox:AddSlider('RecoilControl_Slider', {Text = 'Recoil Control', Min = 0.1, Max = 100, Default = 10, Rounding = 1, Callback = function(v) Settings.RecoilScale = v / 100 end})
 
 end)
 
@@ -845,9 +879,9 @@ local HeadExpander = Tabs.Combat:AddRightGroupbox('Head Expander')
 		
     HeadExpander:AddSlider('HeadSize_Slider', {
         Text = 'Head Size',
-        Min = 2,
-        Max = 40,
-        Default = 10,
+        Min = 1,
+        Max = 4,
+        Default = 2,
         Rounding = 1,
         Callback = function(v)
             ExpansionSize = Vector3.new(v, v, v)
