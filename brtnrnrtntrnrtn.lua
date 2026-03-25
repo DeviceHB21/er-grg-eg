@@ -7,7 +7,7 @@ local Logging = NeverLose:CreateLogger();
 local window = NeverLose:CreateWindow({
 	Logo = "asssetid/115922855794150",
 	Name = "LunarCore",
-	Content = "AR2 | v2.3",
+	Content = "AR2 | v2.4",
 	Size = NeverLose.Scales.Default,
 	ConfigFolder = "LunarCoreConfigs",
 	Enable3DRenderer = false,
@@ -3012,6 +3012,44 @@ LightingSection:AddLabel('No Shadows'):AddToggle({
     end
 })
 
+
+local leavesConnection = nil
+local leavesEnabled = false
+
+local function toggleRemoveLeaves(enabled)
+    if leavesConnection then
+        leavesConnection:Disconnect()
+        leavesConnection = nil
+    end
+    
+    if enabled then
+        leavesConnection = workspace["Map"]["Elements"]["DescendantAdded"]:Connect(function(part)
+            if part["Name"] == "Fronds" or part["Name"] == "Leaves" or part["Name"] == "PineLeaves" then
+                task.wait()
+                part["Transparency"] = 1
+            end
+        end)
+    end
+    
+    local transparency = enabled and 1 or 0
+    local elements = workspace["Map"]["Elements"]:GetDescendants()
+    
+    for _, part in ipairs(elements) do
+        if part["Name"] == "Fronds" or part["Name"] == "Leaves" or part["Name"] == "PineLeaves" then
+            part["Transparency"] = transparency
+        end
+    end
+end
+
+-- ТУГЛ
+LightingSection:AddLabel('Remove Leaves'):AddToggle({
+    Default = false,
+    Flag = "RemoveLeaves",
+    Callback = function(v)
+        toggleRemoveLeaves(v)
+    end
+})
+
 -- ==================== CUSTOM AMBIENT ====================
  ambientToggle = LightingSection:AddLabel('Custom Ambient')
  AmbientEnabled = false
@@ -3376,214 +3414,6 @@ else
 end
 
 -- ==================== WEATHER (SNOW/RAIN) ====================
- WeatherPart = nil
- GroundPart = nil
- CurrentWeatherType = "None"
- WeatherEnabled = false
- weatherSound = nil
-
-function UpdateWeather()
-    -- Видаляємо старі частинки
-    if WeatherPart then 
-        WeatherPart:Destroy() 
-        WeatherPart = nil 
-    end
-    if GroundPart then 
-        GroundPart:Destroy() 
-        GroundPart = nil 
-    end
-    if weatherSound then 
-        weatherSound:Destroy() 
-        weatherSound = nil 
-    end
-    
-    if not WeatherEnabled or CurrentWeatherType == "None" then return end
-    
-    -- Створюємо невидиму частинку в камері для частинок зверху
-    WeatherPart = Instance.new("Part")
-    WeatherPart.Name = "BloxStrike_Weather_Sky"
-    WeatherPart.Size = Vector3.new(500, 1, 500)
-    WeatherPart.Transparency = 1
-    WeatherPart.Anchored = true
-    WeatherPart.CanCollide = false
-    WeatherPart.Parent = workspace.CurrentCamera
-    
-    local SkyEmitter = Instance.new("ParticleEmitter")
-    SkyEmitter.Parent = WeatherPart
-    SkyEmitter.EmissionDirection = Enum.NormalId.Top  -- ЗМІНИВ НА TOP (зверху вниз)
-    SkyEmitter.Enabled = true
-    
-    if CurrentWeatherType == "Rain" then
-        -- ДОЩ - ПАДАЄ ЗВЕРХУ ВНИЗ
-        SkyEmitter.Texture = "rbxassetid://241868005"
-        SkyEmitter.Rate = 15000
-        SkyEmitter.Color = ColorSequence.new(Color3.fromRGB(180, 200, 255))
-        SkyEmitter.Transparency = NumberSequence.new(0)
-        SkyEmitter.Size = NumberSequence.new(0.3, 0.6)
-        SkyEmitter.Lifetime = NumberRange.new(1.5, 2)
-        SkyEmitter.Speed = NumberRange.new(80, 120)  -- Швидкість вниз
-        SkyEmitter.SpreadAngle = Vector2.new(5, 5)  -- Невеликий розкид
-        SkyEmitter.Acceleration = Vector3.new(0, -60, 0)  -- Прискорення вниз
-        SkyEmitter.Orientation = Enum.ParticleOrientation.VelocityParallel
-        SkyEmitter.LightEmission = 0.5
-        
-        -- Бризки на землі
-        GroundPart = Instance.new("Part")
-        GroundPart.Name = "BloxStrike_Weather_Ground"
-        GroundPart.Size = Vector3.new(100, 1, 100)
-        GroundPart.Transparency = 1
-        GroundPart.Anchored = true
-        GroundPart.CanCollide = false
-        GroundPart.Parent = workspace.CurrentCamera
-        
-        local GroundEmitter = Instance.new("ParticleEmitter", GroundPart)
-        GroundEmitter.Texture = "rbxassetid://241576804"
-        GroundEmitter.Rate = 800
-        GroundEmitter.Color = ColorSequence.new(Color3.fromRGB(200, 220, 255))
-        GroundEmitter.Size = NumberSequence.new(0.1, 0.2)
-        GroundEmitter.Lifetime = NumberRange.new(0.2, 0.4)
-        GroundEmitter.Speed = NumberRange.new(1, 3)
-        GroundEmitter.SpreadAngle = Vector2.new(180, 180)
-        
-        -- Звук дощу
-        weatherSound = Instance.new("Sound", WeatherPart)
-        weatherSound.SoundId = "rbxassetid://3786250088"
-        weatherSound.Volume = 6
-        weatherSound.Looped = true
-        weatherSound.Playing = true
-        
-    elseif CurrentWeatherType == "Snow" then
-        -- СНІГ - ПАДАЄ ПОВІЛЬНО ВНИЗ
-        SkyEmitter.Texture = "rbxassetid://241396659"
-        SkyEmitter.Rate = 1500
-        SkyEmitter.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
-        SkyEmitter.Size = NumberSequence.new(1.5, 2.5)
-        SkyEmitter.Transparency = NumberSequence.new(0)
-        SkyEmitter.Speed = NumberRange.new(5, 10)  -- Повільно вниз
-        SkyEmitter.Lifetime = NumberRange.new(5, 8)
-        SkyEmitter.Acceleration = Vector3.new(0, -3, 0)  -- Легке прискорення вниз
-        SkyEmitter.SpreadAngle = Vector2.new(30, 30)
-        SkyEmitter.LightEmission = 2
-        SkyEmitter.Rotation = NumberRange.new(0, 360)
-        SkyEmitter.RotSpeed = NumberRange.new(-20, 20)
-        
-        GroundPart = Instance.new("Part")
-        GroundPart.Name = "BloxStrike_Weather_Ground"
-        GroundPart.Size = Vector3.new(100, 1, 100)
-        GroundPart.Transparency = 1
-        GroundPart.Anchored = true
-        GroundPart.CanCollide = false
-        GroundPart.Parent = workspace.CurrentCamera
-        
-        local GroundEmitter = Instance.new("ParticleEmitter", GroundPart)
-        GroundEmitter.Texture = "rbxassetid://241396659"
-        GroundEmitter.Rate = 400
-        GroundEmitter.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
-        GroundEmitter.Size = NumberSequence.new(0.5, 1)
-        GroundEmitter.Lifetime = NumberRange.new(1, 2)
-        GroundEmitter.Speed = NumberRange.new(0, 1)
-        GroundEmitter.SpreadAngle = Vector2.new(360, 360)
-        
-    elseif CurrentWeatherType == "Heavy Snow" then
-        -- БАГАТО СНІГУ
-        SkyEmitter.Texture = "rbxassetid://241396659"
-        SkyEmitter.Rate = 3000
-        SkyEmitter.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
-        SkyEmitter.Size = NumberSequence.new(1, 2)
-        SkyEmitter.Transparency = NumberSequence.new(0)
-        SkyEmitter.Speed = NumberRange.new(4, 8)
-        SkyEmitter.Lifetime = NumberRange.new(6, 10)
-        SkyEmitter.Acceleration = Vector3.new(0, -2.5, 0)
-        SkyEmitter.SpreadAngle = Vector2.new(40, 40)
-        SkyEmitter.LightEmission = 1.8
-        
-        GroundPart = Instance.new("Part")
-        GroundPart.Name = "BloxStrike_Weather_Ground"
-        GroundPart.Size = Vector3.new(100, 1, 100)
-        GroundPart.Transparency = 1
-        GroundPart.Anchored = true
-        GroundPart.CanCollide = false
-        GroundPart.Parent = workspace.CurrentCamera
-        
-        local GroundEmitter = Instance.new("ParticleEmitter", GroundPart)
-        GroundEmitter.Texture = "rbxassetid://241396659"
-        GroundEmitter.Rate = 800
-        GroundEmitter.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
-        GroundEmitter.Size = NumberSequence.new(0.4, 0.8)
-        GroundEmitter.Lifetime = NumberRange.new(1, 2)
-        
-    elseif CurrentWeatherType == "Hell Fire" then
-        -- ВОГОНЬ
-        SkyEmitter.Texture = "rbxassetid://242205518"
-        SkyEmitter.Rate = 1500
-        SkyEmitter.Color = ColorSequence.new(Color3.fromRGB(255, 80, 0), Color3.fromRGB(255, 0, 0))
-        SkyEmitter.Size = NumberSequence.new(1, 2)
-        SkyEmitter.Transparency = NumberSequence.new(0, 0.5)
-        SkyEmitter.Speed = NumberRange.new(40, 70)
-        SkyEmitter.Lifetime = NumberRange.new(2, 3.5)
-        SkyEmitter.Acceleration = Vector3.new(0, -20, 0)
-        SkyEmitter.LightEmission = 3
-        SkyEmitter.SpreadAngle = Vector2.new(10, 10)
-        
-        GroundPart = Instance.new("Part")
-        GroundPart.Name = "BloxStrike_Weather_Ground"
-        GroundPart.Size = Vector3.new(100, 1, 100)
-        GroundPart.Transparency = 1
-        GroundPart.Anchored = true
-        GroundPart.CanCollide = false
-        GroundPart.Parent = workspace.CurrentCamera
-        
-        local GroundEmitter = Instance.new("ParticleEmitter", GroundPart)
-        GroundEmitter.Texture = "rbxassetid://242205518"
-        GroundEmitter.Rate = 400
-        GroundEmitter.Color = ColorSequence.new(Color3.fromRGB(255, 60, 0), Color3.fromRGB(100, 0, 0))
-        GroundEmitter.Size = NumberSequence.new(0.4, 0.8)
-    end
-    
-    if GroundPart then
-        GroundPart.Parent = workspace.CurrentCamera
-    end
-end
--- Додаємо Weather в UI з Toggle та Dropdown
-weatherMainToggle = LightingSection:AddLabel('Weather')
-weatherMainToggle:AddToggle({
-    Default = false,
-    Flag = "WeatherEnable",
-    Callback = function(Value)
-        WeatherEnabled = Value
-        UpdateWeather()
-    end
-})
--- Три крапки для додаткових опцій
-weatherOptions = weatherMainToggle:AddOption()
-
--- Dropdown для вибору типу погоди
-weatherOptions:AddLabel('Weather Type'):AddDropdown({
-    Default = 'None',
-    Values = {'None', 'Snow', 'Heavy Snow', 'Rain', 'Hell Fire'},
-    Flag = "WeatherType",
-    Callback = function(Value)
-        CurrentWeatherType = Value
-        if WeatherEnabled then
-            UpdateWeather()
-        end
-    end
-})
-
-if RunService then
-    RunService.RenderStepped:Connect(function()
-        pcall(function()
-            if WeatherPart and WeatherPart.Parent and workspace.CurrentCamera then
-                local CamCF = workspace.CurrentCamera.CFrame
-                WeatherPart.CFrame = CamCF * CFrame.new(0, 45, 0)
-            end
-            if GroundPart and GroundPart.Parent and workspace.CurrentCamera then
-                local CamCF = workspace.CurrentCamera.CFrame
-                GroundPart.CFrame = CamCF * CFrame.new(0, 0.5, 12)
-            end
-        end)
-    end)
-end
 
 -- BULLET TRACER
  tracerToggle = BulletTracerSection:AddLabel('Bullet Tracer')
@@ -3814,6 +3644,43 @@ MovementSection:AddLabel('Double Jump'):AddToggle({
     Flag = "DoubleJump",
     Callback = function(Value)
         movementFlags.doubleJumpEnabled = Value
+    end
+})
+
+-- Player Jesus (ходіння по воді)
+local function togglePlayerJesus(enabled)
+    local water = workspace:FindFirstChild("Map")
+    if not water then 
+        water = workspace
+    end
+    water = water:FindFirstChild("Water")
+    if not water then
+        return
+    end
+
+    local waterParts = water:GetDescendants()
+
+    for _, part in ipairs(waterParts) do
+        if enabled then
+            if part:HasTag("Swim Surface") then
+                part:RemoveTag("Swim Surface")
+                part:AddTag("Player Jesus")
+            end
+        else
+            if part:HasTag("Player Jesus") then
+                part:RemoveTag("Player Jesus")
+                part:AddTag("Swim Surface")
+            end
+        end
+    end
+end
+
+-- ТУГЛ
+MovementSection:AddLabel('Player Jesus'):AddToggle({
+    Default = false,
+    Flag = "PlayerJesus",
+    Callback = function(v)
+        togglePlayerJesus(v)
     end
 })
 
@@ -4171,6 +4038,41 @@ local VehicleFlySection = Misc:AddSection({
     Position = "Right"
 })
 
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local ScriptContext = game:GetService("ScriptContext")
+local Framework = require(ReplicatedFirst:FindFirstChild("Framework"))
+
+Framework:WaitForLoaded()
+
+task.spawn(function()
+    pcall(function()
+        for _, v in getconnections(ScriptContext.Error) do
+            v:Disconnect()
+        end
+    end)
+end)
+
+local Network = Framework.Libraries.Network
+local OldFetch = Network.Fetch
+
+local InfFuel = false
+
+Network.Fetch = function(self, Name, ...)
+    if Name == "Vehicle Report Input" and InfFuel then
+        return true
+    end
+    return OldFetch(self, Name, ...)
+end
+
+-- Твій тугл (чистий, як ти хотів)
+VehicleFlySection:AddLabel('Infinite Fuel'):AddToggle({
+    Default = false,
+    Callback = function(v)
+        InfFuel = v
+    end,
+    Flag = "InfFuel"
+})
+
 -- Основний Toggle (зберігаємо callback)
 local flyToggle = VehicleFlySection:AddLabel('Vehicle Fly')
 flyToggle:AddToggle({
@@ -4223,6 +4125,84 @@ flyOptions:AddLabel('Fly Keybind'):AddKeybind({
         else
             flyKeybind = tostring(Value)
         end
+    end
+})
+
+local GameSection = Misc:AddSection({
+    Name = "Game",
+    Position = "Right"
+})
+
+-- Instant Interact (миттєва взаємодія)
+
+local Framework = require(game:GetService("ReplicatedFirst")["Framework"])
+local instantInteractEnabled = false
+
+local original = Framework["Classes"]["Interactables"]["GetInteractPromptData"]
+
+Framework["Classes"]["Interactables"]["GetInteractPromptData"] = function(...)
+    local data = original(...)
+    if instantInteractEnabled and data.Actions and data.Actions[1] then
+        data.Actions[1].Time = 0
+    end
+    return data
+end
+
+-- ТУГЛ
+GameSection:AddLabel('Instant Interact'):AddToggle({
+    Default = false,
+    Flag = "InstantInteract",
+    Callback = function(v)
+        instantInteractEnabled = v
+    end
+})
+
+
+local Framework = require(game:GetService("ReplicatedFirst")["Framework"])
+local containerPersistenceEnabled = false
+
+-- Перехоплюємо відправку закриття інвентаря
+local oldNetworkSend = nil
+local networkLib = Framework["Libraries"]["Network"]
+
+-- Знаходимо оригінальну функцію Send
+for i = 1, 100 do
+    local success, val = pcall(function()
+        return getupvalue(networkLib.Send, i)
+    end)
+    if success and val == networkLib.Send then
+        -- Found the upvalue reference
+    end
+end
+
+-- Store the original Send function
+oldNetworkSend = networkLib.Send
+
+if oldNetworkSend then
+    -- Create a new function that preserves the method call syntax
+    local function newNetworkSend(self, ...)
+        local args = {...}
+        local eventName = args[1] -- The first argument after 'self' is typically the event name
+        
+        -- Блокуємо закриття інвентаря якщо увімкнено
+        if eventName == "Inventory Closed" and containerPersistenceEnabled then
+            return
+        end
+        
+        -- Call the original function with proper method syntax
+        return oldNetworkSend(self, ...)
+    end
+    
+    -- Replace the Send function while preserving the method binding
+    networkLib.Send = newNetworkSend
+end
+
+-- ТУГЛ
+GameSection:AddLabel('Container Persistence'):AddToggle({
+    Default = false,
+    Flag = "ContainerPersistence",
+    Callback = function(v)
+        containerPersistenceEnabled = v
     end
 })
 
