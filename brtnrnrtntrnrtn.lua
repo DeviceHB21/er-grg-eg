@@ -2016,6 +2016,67 @@ GunModsSection:AddLabel('Instant Reload'):AddToggle({
     Callback = function(v) instantReloadEnabled = v end
 })
 
+task.spawn(function()
+local Framework = require(game:GetService("ReplicatedFirst")["Framework"])
+local PlayerClass = Framework["Classes"]["Players"]["get"]()
+local R_KEY_CODE = Enum.KeyCode.R
+
+local isReloading = false
+local autoReloadEnabled = false
+
+-- Функція перезарядки
+local function doReload()
+    if isReloading then return end
+    
+    isReloading = true
+    local VirtualInput = game:GetService("VirtualInputManager")
+    
+    VirtualInput:SendKeyEvent(true, R_KEY_CODE, false, game)
+    task.wait(0.05)
+    VirtualInput:SendKeyEvent(false, R_KEY_CODE, false, game)
+    
+    task.wait(2.5)
+    isReloading = false
+end
+
+-- Функція перевірки набоїв
+local function checkAmmo()
+    if not autoReloadEnabled then return end
+    
+    local character = PlayerClass["Character"]
+    if not character then return end
+    
+    local equipped = character["EquippedItem"]
+    if not equipped or not equipped["__item"] then return end
+    
+    local ammo = equipped["__item"]["Attachments"]["Ammo"]
+    if not ammo then return end
+    
+    local currentAmmo = ammo["__item"]["WorkingAmount"]
+    
+    if currentAmmo == 0 and not isReloading then
+        doReload()
+    end
+end
+
+-- Постійна перевірка
+task.spawn(function()
+    while true do
+        task.wait(0.15)
+        pcall(checkAmmo)
+    end
+end)
+
+-- ТУГЛ
+GunModsSection:AddLabel('Auto Reload'):AddToggle({
+    Default = false,
+    Flag = "AutoReload",
+    Callback = function(v)
+        autoReloadEnabled = v
+    end
+})
+end)
+
 GunModsSection:AddLabel('Unlock Firemodes'):AddToggle({
     Default = false,
     Flag = "UnlockFiremodes",
