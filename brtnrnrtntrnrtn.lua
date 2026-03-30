@@ -7,7 +7,7 @@ local Logging = NeverLose:CreateLogger();
 local window = NeverLose:CreateWindow({
 	Logo = "asssetid/115922855794150",
 	Name = "LunarCore",
-	Content = "AR2 | v2.4",
+	Content = "AR2 | v2.5",
 	Size = NeverLose.Scales.Default,
 	ConfigFolder = "LunarCoreConfigs",
 	Enable3DRenderer = false,
@@ -2089,6 +2089,39 @@ GunModsSection:AddLabel('Always Suppressed'):AddToggle({
     Callback = function(v) alwaysSuppressedEnabled = v end
 })
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Змінна для стану
+getgenv().antiFlinch = false
+
+-- Шукаємо Globals
+local Globals = nil
+for _, v in next, getgc(true) do
+    if type(v) == "table" and rawget(v, "GlobalFlinchMod") then
+        Globals = v
+        break
+    end
+end
+
+-- Функція ввімкнення/вимкнення
+local function setAntiFlinch(state)
+    getgenv().antiFlinch = state
+    if Globals then
+        Globals.GlobalFlinchMod = state and 0 or 1
+    end
+end
+
+-- ТУГЛ (встав це в своє меню)
+GunModsSection:AddLabel('Anti Flinch'):AddToggle({
+    Default = false,
+    Flag = "AntiFlinch",
+    Callback = function(v) 
+        setAntiFlinch(v) 
+    end
+})
+
 -- AIM BOT
 AimbotSection:AddLabel('Aim Bot'):AddToggle({
     Default = false,
@@ -3735,6 +3768,63 @@ local function togglePlayerJesus(enabled)
         end
     end
 end
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+getgenv().noclipEnabled = false
+local noclipConnection = nil
+
+local function noclip()
+    if not getgenv().noclipEnabled then return end
+    
+    local char = LocalPlayer.Character
+    if not char then return end
+    
+    for _, v in pairs(char:GetDescendants()) do
+        if v:IsA("BasePart") and v.CanCollide then
+            v.CanCollide = false
+        end
+    end
+end
+
+local function clip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+    
+    local char = LocalPlayer.Character
+    if char then
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = true
+            end
+        end
+    end
+end
+
+local function toggleNoclip(state)
+    getgenv().noclipEnabled = state
+    
+    if state then
+        if not noclipConnection then
+            noclipConnection = RunService.Stepped:Connect(noclip)
+        end
+    else
+        clip()
+    end
+end
+
+-- ТУГЛ
+MovementSection:AddLabel('Noclip'):AddToggle({
+    Default = false,
+    Flag = "Noclip",
+    Callback = function(v)
+        toggleNoclip(v)
+    end
+})
 
 -- ТУГЛ
 MovementSection:AddLabel('Player Jesus'):AddToggle({
