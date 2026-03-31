@@ -4,11 +4,11 @@
     local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/sashanz/library/refs/heads/main/1'))()
     local ThemeManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/sashanz/Theme/refs/heads/main/32'))()
     local SaveManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/DeviceHB21/Custom-Liblinoria/refs/heads/main/addons/SaveManager.lua'))() 
-local Build = "Free";
+local Build = "Paid";
 local Color = "#FF0000";
 local Ver = "v1.1"
 
-if Build == "Free" then 
+if Build == "Paid" then 
     Color = '#FF0000' 
     Ver = "v1.1" 
 end
