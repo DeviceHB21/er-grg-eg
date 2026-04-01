@@ -31,117 +31,117 @@ task.spawn(function()
 	end
 end)
 
-local Rage = window:AddTab({
+ Rage = window:AddTab({
 	Icon = 'crosshairs',
 	Name = "Rage",
 })
 
-local Legit = window:AddTab({
+ Legit = window:AddTab({
 	Icon = 'mouse-scrollwheel',
 	Name = "Legit",
 })
 
-local Esp = window:AddTab({
+ Esp = window:AddTab({
 	Icon = 'eye',
 	Name = "Esp",
 })
 
-local World = window:AddTab({
+ World = window:AddTab({
 	Icon = 'world',
 	Name = "World",
 })
 
-local Misc = window:AddTab({
+ Misc = window:AddTab({
 	Icon = 'cog',
 	Name = "Misc"
 })
 
-local SilentAimSection = Rage:AddSection({
+ SilentAimSection = Rage:AddSection({
 	Name = "SILENT AIM"
 })
 
-local FOVSection = Rage:AddSection({
+ FOVSection = Rage:AddSection({
 	Name = "FOV",
 	Position = 'right'
 })
 
-local SnapLineSection = Rage:AddSection({
+ SnapLineSection = Rage:AddSection({
 	Name = "SNAP LINE",
 	Position = 'right'
 })
 
-local GunModsSection = Rage:AddSection({
+ GunModsSection = Rage:AddSection({
 	Name = "GUN MODS",
 	Position = 'left'
 })
 
-local AimbotSection = Legit:AddSection({
+ AimbotSection = Legit:AddSection({
 	Name = "AIM BOT"
 })
 
-local LegitFOVSection = Legit:AddSection({
+ LegitFOVSection = Legit:AddSection({
 	Name = "FOV",
 	Position = 'right'
 })
 
-local LegitSnapLineSection = Legit:AddSection({
+ LegitSnapLineSection = Legit:AddSection({
 	Name = "SNAP LINE",
 	Position = 'right'
 })
 
-local PlayerESPSection = Esp:AddSection({
+ PlayerESPSection = Esp:AddSection({
 	Name = "ESP PLAYER"
 })
 
-local PlayerChamsSection = Esp:AddSection({
+ PlayerChamsSection = Esp:AddSection({
 	Name = "CHAMS",
 	Position = 'left'
 })
 
-local CorpseESPSection = Esp:AddSection({
+ CorpseESPSection = Esp:AddSection({
 	Name = "CORPSE ESP",
 	Position = 'right'
 })
 
-local VehicleESPSection = Esp:AddSection({
+ VehicleESPSection = Esp:AddSection({
 	Name = "VEHICLE ESP",
 	Position = 'right'
 })
 
-local ZombieESPSection = Esp:AddSection({
+ ZombieESPSection = Esp:AddSection({
 	Name = "ZOMBIE ESP",
 	Position = 'right'
 })
 
-local LightingSection = World:AddSection({
+ LightingSection = World:AddSection({
 	Name = "LIGHTING"
 })
 
-local BulletTracerSection = World:AddSection({
+ BulletTracerSection = World:AddSection({
 	Name = "BULLET TRACER",
 	Position = 'right'
 })
 
-local LocalPlayerSection = World:AddSection({
+ LocalPlayerSection = World:AddSection({
 	Name = "LOCAL PLAYER",
 	Position = 'right'
 })
 
-local CrosshairSection = World:AddSection({
+ CrosshairSection = World:AddSection({
 	Name = "CUSTOM CROSSHAIR",
 	Position = 'right'
 })
 
-local MovementSection = Misc:AddSection({
+ MovementSection = Misc:AddSection({
 	Name = "MOVEMENT"
 })
 
-local AntiAimSection = Misc:AddSection({
+ AntiAimSection = Misc:AddSection({
 	Name = "ANTI AIM",
 	Position = 'left'
 })
 
-local ZombieSection = Misc:AddSection({
+ ZombieSection = Misc:AddSection({
 	Name = "ZOMBIE",
 	Position = 'left'
 })
