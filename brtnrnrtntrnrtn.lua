@@ -4184,7 +4184,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 -- ==================== UI ДЛЯ ВСТАВКИ В ТВІЙ СКРИПТ ====================
-local VehicleFlySection = Misc:AddSection({
+ VehicleFlySection = Misc:AddSection({
     Name = "VEHICLE FLY",
     Position = "Right"
 })
@@ -4225,7 +4225,7 @@ VehicleFlySection:AddLabel('Infinite Fuel'):AddToggle({
 })
 
 -- Основний Toggle (зберігаємо callback)
-local flyToggle = VehicleFlySection:AddLabel('Vehicle Fly')
+ flyToggle = VehicleFlySection:AddLabel('Vehicle Fly')
 flyToggle:AddToggle({
     Default = false,
     Flag = "VehicleFly",
@@ -4249,7 +4249,7 @@ flyToggle:AddToggle({
 })
 
 -- Три крапки для налаштувань
-local flyOptions = flyToggle:AddOption()
+ flyOptions = flyToggle:AddOption()
 
 -- Speed Slider (1-80)
 flyOptions:AddLabel('Fly Speed'):AddSlider({
@@ -4279,7 +4279,7 @@ flyOptions:AddLabel('Fly Keybind'):AddKeybind({
     end
 })
 
-local GameSection = Misc:AddSection({
+ GameSection = Misc:AddSection({
     Name = "Game",
     Position = "Right"
 })
@@ -4287,7 +4287,7 @@ local GameSection = Misc:AddSection({
 -- Instant Interact (миттєва взаємодія)
 
 local Framework = require(game:GetService("ReplicatedFirst")["Framework"])
-local instantInteractEnabled = false
+ instantInteractEnabled = false
 
 local original = Framework["Classes"]["Interactables"]["GetInteractPromptData"]
 
