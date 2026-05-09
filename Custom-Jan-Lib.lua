@@ -1,6 +1,4 @@
-pcall(function()
-    setmetatable(option, {__newindex = function(t, i, v)
-					
+				
 --Services
 getgenv().runService = game:GetService"RunService"
 getgenv().textService = game:GetService"TextService"
@@ -225,14 +223,13 @@ library.createDivider = function(option, parent)
 		Parent = option.main
 	})
 
+pcall(function()
 	setmetatable(option, {__newindex = function(t, i, v)
 		if i == "Text" then
 			if v then
 				option.title.Text = tostring(v)
 				option.title.Size = UDim2.new(0, textService:GetTextSize(option.title.Text, 15, Enum.Font.Code, Vector2.new(9e9, 9e9)).X + 12, 0, 20)
 				option.main.Size = UDim2.new(1, 0, 0, 18)
-
-				-- 🔥 Якщо stats = "yellow", жовтий текст
 				if option.stats and option.stats:lower() == "yellow" then
 					option.title.TextColor3 = Color3.fromRGB(255, 255, 0)
 				else
@@ -245,7 +242,8 @@ library.createDivider = function(option, parent)
 			end
 		end
 	end})
-	option.Text = option.text
+end)
+option.Text = option.text
 end
 
 library.createToggle = function(option, parent)
@@ -2766,6 +2764,3 @@ function library:Init()
 end
 
 return library
-
-	end})
-end)
