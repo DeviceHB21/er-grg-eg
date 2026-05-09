@@ -1,3 +1,6 @@
+pcall(function()
+    setmetatable(option, {__newindex = function(t, i, v)
+					
 --Services
 getgenv().runService = game:GetService"RunService"
 getgenv().textService = game:GetService"TextService"
@@ -2763,3 +2766,6 @@ function library:Init()
 end
 
 return library
+
+	end})
+end)
